@@ -1,0 +1,69 @@
+ # TODO: convert to array job testing every node
+- name: Add Intel repos
+  command: yum-config-manager --add-repo https://yum.repos.intel.com/setup/intelproducts.repo
+  args:
+    creates: /etc/yum.repos.d/intelproducts.repo
+- name: Import Intel GPG keys
+  command: rpm --import https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
+  # TODO: make idempotent
+- name: Install Intel MPI
+  yum:
+    name: "intel-mpi-{{ impi_ver }}"
+- name: Install MKL
+  yum:
+    name: "intel-mkl-{{ mkl_ver }}"
+- name: Make directory
+  file:
+    path: "{{ jobdir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+- name: Get info about compute nodes
+  shell: sinfo -Nh
+  register:
+    num_compute
+- name: Get compute memory (in megabytes)
+  command: free --mega
+  delegate_to: "{{ groups['cluster_compute'][0] }}" # TODO: no way to deal with groups? Better to use `sinfo` but memory not set propery!
+  register: free
+  connection: local # except this doesn't work
+- name: Create sbatch script
+  copy:
+    dest: "{{ jobdir }}/hpl-solo.sh"
+    content: |
+      #!/usr/bin/bash
+
+      #SBATCH --ntasks=1
+      #SBATCH --output=%x.out
+      #SBATCH --error=%x.out
+
+      source /opt/intel/compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
+      source /opt/intel/compilers_and_libraries/linux/mkl/bin/mklvars.sh intel64
+      export I_MPI_DEBUG=4 # puts Node name in output
+      #export UCX_NET_DEVICES=mlx5_0:1 # TODO: 
+      
+      cp $MKLROOT/benchmarks/mp_linpack/HPL.dat .
+      mpirun -perhost 1 -np 1 $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ (free.stdout_lines[1].split()[1] | int * 0.8)}} -b {{ hpl_NB }} -p 1 -q 1
+
+- name: Run hpl
+  #shell: sbatch --array=0-{{ num_compute.stdout_lines | count }} --wait hpl-solo.sh
+  shell: sbatch --wait hpl-solo.sh
+  become: no
+  register:
+  args:
+    chdir: "{{ jobdir }}"
+- name: Check HPL completed OK
+  tags: grep
+  shell: "grep '1 tests completed and passed residual checks' *.out"
+  args:
+    chdir: "{{ jobdir }}"
+  changed_when: false
+- name: Extract performance
+  tags: grep
+  shell: "grep '^W[R|C]' *.out"
+  args:
+    chdir: "{{ jobdir }}"
+  changed_when: false
+  register: hpl_gflops
+- tags: grep
+  debug:
+    msg: "Gflops: {{ hpl_gflops.stdout.split()[6] }}"

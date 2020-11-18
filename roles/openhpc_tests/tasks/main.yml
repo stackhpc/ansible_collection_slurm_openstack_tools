@@ -1,0 +1,37 @@
+---
+# NB: this only works on centos 8 / ohpc v2 as we want UCX
+# TODO: add support for groups/partitions
+# Currently need to run with something like:
+#   ANSIBLE_LIBRARY=. ansible-playbook -i inventory test.yml
+        
+
+- name: IMB PingPong (2x scheduler-selected nodes)
+  block:
+    - include: pingpong.yml
+  tags: pingpong
+  vars:
+    jobdir: /mnt/nfs/pingpong
+  become: yes
+
+- name: Ping matrix (all nodes)
+  block:
+    - include: pingmatrix.yml
+  tags: pingmatrix
+  vars:
+    jobdir: /mnt/nfs/pingmatrix
+  become: yes
+
+- name: HPL (individual nodes)
+  # NB: This uses the precompiled HPL provided with MKL so runs a single MPI process per node, with TBB threads added automatically by MKL to use all cores
+  # See https://software.intel.com/content/www/us/en/develop/documentation/mkl-windows-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/ease-of-use-command-line-parameters.html
+  block:
+    - include: hpl-solo.yml
+  tags: hpl-solo
+  vars:
+    jobdir: /mnt/nfs/hpl-solo
+    impi_ver: 2019.6-088
+    mkl_ver: 2020.0-088
+    hpl_NB: 192 # See https://software.intel.com/content/www/us/en/develop/documentation/mkl-linux-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html
+  become: yes
+  
+  
