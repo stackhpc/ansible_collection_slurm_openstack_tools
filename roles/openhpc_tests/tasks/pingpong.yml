@@ -2,6 +2,7 @@
   yum:
     name: ohpc-gnu9-openmpi4-perf-tools
     state: present
+  become: yes
 - name: Make directory
   file:
     path: "{{ jobdir }}"

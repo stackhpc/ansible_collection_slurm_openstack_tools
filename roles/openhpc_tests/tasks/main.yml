@@ -3,23 +3,29 @@
 # TODO: add support for groups/partitions
 # Currently need to run with something like:
 #   ANSIBLE_LIBRARY=. ansible-playbook -i inventory test.yml
-        
+
+- name: Create test root directory
+  file:
+    path: "{{ openhpc_tests_rootdir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: 0755
+  become: no
+  tags: always
 
 - name: IMB PingPong (2x scheduler-selected nodes)
   block:
     - include: pingpong.yml
   tags: pingpong
   vars:
-    jobdir: /mnt/nfs/pingpong
-  become: yes
+    jobdir: "{{ openhpc_tests_rootdir }}/pingpong"
 
 - name: Ping matrix (all nodes)
   block:
     - include: pingmatrix.yml
   tags: pingmatrix
   vars:
-    jobdir: /mnt/nfs/pingmatrix
-  become: yes
+    jobdir: "{{ openhpc_tests_rootdir }}/pingmatrix"
 
 - name: HPL (individual nodes)
   # NB: This uses the precompiled HPL provided with MKL so runs a single MPI process per node, with TBB threads added automatically by MKL to use all cores
@@ -28,10 +34,9 @@
     - include: hpl-solo.yml
   tags: hpl-solo
   vars:
-    jobdir: /mnt/nfs/hpl-solo
+    jobdir: "{{ openhpc_tests_rootdir }}/hpl-solo"
     impi_ver: 2019.6-088
     mkl_ver: 2020.0-088
     hpl_NB: 192 # See https://software.intel.com/content/www/us/en/develop/documentation/mkl-linux-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html
-  become: yes
   
   
