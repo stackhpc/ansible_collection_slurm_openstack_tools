@@ -17,6 +17,7 @@
       #SBATCH --ntasks-per-node=1
       #SBATCH --output=%x.out
       #SBATCH --error=%x.out
+      #SBATCH --exclusive
       
       #export UCX_NET_DEVICES=mlx5_0:1
       module load gnu9/9.3.0
