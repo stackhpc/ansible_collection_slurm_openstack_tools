@@ -19,7 +19,7 @@
       #SBATCH --error=%x.out
       #SBATCH --exclusive
       
-      #export UCX_NET_DEVICES=mlx5_0:1
+      export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
       module load gnu9/9.3.0
       module load openmpi4/4.0.4
       module load imb/2019.6
