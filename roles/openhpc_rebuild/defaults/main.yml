@@ -1,0 +1,5 @@
+---
+openhpc_rebuild_clouds: ~/.config/openstack/clouds.yaml
+openhpc:
+  batch: false
+openhpc_rebuild_reconfigure: true

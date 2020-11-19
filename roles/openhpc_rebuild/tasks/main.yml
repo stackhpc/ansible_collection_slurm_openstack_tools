@@ -1,0 +1,54 @@
+---
+
+- block:
+    - name: Create /etc/openstack
+      file:
+        path: /etc/openstack
+        state: directory
+        owner: root
+        group: root
+        mode: '0400'
+    - name: Copy out clouds.yaml
+      copy:
+        src: "{{ openhpc_rebuild_clouds }}"
+        dest: /etc/openstack/clouds.yaml
+        owner: root
+        group: root
+        mode: '0400'
+  when: openhpc_enable.batch
+  # TODO: warn/error if more than one entry?
+
+- block:
+    - name: install python3
+      package:
+        name: python3,git
+    - name: create venv
+      command: python3 -m venv /opt/slurm-tools
+      args:
+        creates: /opt/slurm-tools
+    - name: install slurm-openstack-tools
+      shell: |
+        source /opt/slurm-tools/bin/activate
+        pip install --user pip
+        pip install --user git+https://github.com/stackhpc/slurm-openstack-tools.git
+      args:
+        creates: /opt/slurm-tools/bin/slurm-openstack-rebuild
+  when: openhpc_enable.batch
+
+- name: check for slurm.conf
+  stat:
+    path: /etc/slurm/slurm.conf
+  register: slurm_conf
+
+- name: add RebootProgram to slurm.conf
+  lineinfile:
+    path: "/etc/slurm/slurm.conf"
+    regexp: "^RebootProgram=.*$"
+    line: "RebootProgram=/opt/slurm-tools/bin/slurm-openstack-rebuild"
+  when: slurm_conf.stat.exists
+
+- name: reconfigure slurm
+  shell:
+    cmd: "scontrol reconfigure"
+  when: openhpc_rebuild_reconfigure
+  run_once: true
