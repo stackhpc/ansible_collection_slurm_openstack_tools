@@ -42,7 +42,7 @@
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
       
       cp $MKLROOT/benchmarks/mp_linpack/HPL.dat .
-      mpirun -perhost 1 -np 1 $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ (free.stdout_lines[1].split()[1] | int * 0.8)}} -b {{ openhpc_hpl_NB }} -p 1 -q 1
+      mpirun -perhost 1 -np 1 $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ (free.stdout_lines[1].split()[1] | int * 0.8)}} -b {{ openhpc_tests_hpl_NB }} -p 1 -q 1
 
 - name: Run hpl
   shell: sbatch --array=0-{{ num_compute.stdout_lines | count - 1 }} --wait hpl-solo.sh
