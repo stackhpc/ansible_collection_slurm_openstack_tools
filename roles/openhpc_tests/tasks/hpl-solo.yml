@@ -1,4 +1,3 @@
- # TODO: convert to array job testing every node
 - name: Add Intel repos
   command: yum-config-manager --add-repo https://yum.repos.intel.com/setup/intelproducts.repo
   args:
@@ -33,8 +32,9 @@
       #!/usr/bin/bash
 
       #SBATCH --ntasks=1
-      #SBATCH --output=%x.out
-      #SBATCH --error=%x.out
+      #SBATCH --output=%x.%a.out
+      #SBATCH --error=%x.%a.out
+      #SBATCH --exclusive
 
       source /opt/intel/compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
       source /opt/intel/compilers_and_libraries/linux/mkl/bin/mklvars.sh intel64
@@ -45,8 +45,7 @@
       mpirun -perhost 1 -np 1 $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ (free.stdout_lines[1].split()[1] | int * 0.8)}} -b {{ hpl_NB }} -p 1 -q 1
 
 - name: Run hpl
-  #shell: sbatch --array=0-{{ num_compute.stdout_lines | count }} --wait hpl-solo.sh
-  shell: sbatch --wait hpl-solo.sh
+  shell: sbatch --array=0-{{ num_compute.stdout_lines | count - 1 }} --wait hpl-solo.sh
   become: no
   register:
   args:
@@ -57,13 +56,18 @@
   args:
     chdir: "{{ jobdir }}"
   changed_when: false
+  register: passed
+  failed_when: "passed.stdout_lines | length != num_compute.stdout_lines | length"
 - name: Extract performance
   tags: grep
   shell: "grep '^W[R|C]' *.out"
   args:
     chdir: "{{ jobdir }}"
   changed_when: false
-  register: hpl_gflops
+  register: perf
 - tags: grep
   debug:
-    msg: "Gflops: {{ hpl_gflops.stdout.split()[6] }}"
+    msg: "{{ item[1].split()[0] }}: {{ item[0].split()[6] }} Gflops"
+  loop: "{{ perf.stdout_lines | zip(num_compute.stdout_lines) | list }}"
+  loop_control:
+      label: "{{ item[0].split(':')[0] }}" # filename

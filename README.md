@@ -9,8 +9,4 @@ Included roles:
         - `pingmatrix`: Run a similar pingpong test but between all nodes. Reports zero-size message latency & maximum bandwidth. TODOs:
             - Provide output in matrix form.
             - Describe source and difference from IMB pingpong.
-        - `hpl-solo`: Run HPL on a single scheduler-selected node, using 80% of memory. Reports Gflops.**NB:** Needs HPL block size "NB" setting as variable `hpl_NB`. TODOs:
-            - Run on all nodes, not just one.
-
-
-
+        - `hpl-solo`: Run HPL **separately** on all nodes, using 80% of memory. Reports Gflops.**NB:** Needs HPL block size "NB" setting as variable `hpl_NB`.
