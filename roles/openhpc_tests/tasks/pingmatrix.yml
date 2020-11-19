@@ -42,20 +42,15 @@
   become: no
   args:
     chdir: "{{ jobdir }}"
-- name: Slurp output
-  slurp:
-    src: "{{ jobdir }}/pingmatrix.sh.out"
-  register: ping_out
-- debug:
-    msg: "{{ ping_out['content'] | b64decode }}"
 - name: Process output
   plot_nxnlatbw:
     src: "{{ jobdir }}/pingmatrix.sh.out"
     dest: "{{ jobdir }}/pingmatrix.html"
   register: nxnlatbw
-- debug:
+- name: Summarise results
+  debug:
     msg: "{{ nxnlatbw['stats'] }}"
-- name: Fetch html table
+- name: Fetch html table to /tmp/pingmatrix.html
   fetch:
     src: "{{ jobdir }}/pingmatrix.html"
     dest: /tmp/pingmatrix.html
