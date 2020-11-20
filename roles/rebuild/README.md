@@ -37,17 +37,13 @@ A list of other roles hosted on Galaxy should go here, plus any details in regar
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-
-
     - hosts: cluster
       name: Setup openstack rebuild script
       tags: rebuild
       become: true
       tasks:
         - import_role:
-            name: stackhpc.slurm_openstack_tools.openhpc_rebuild
+            name: stackhpc.slurm_openstack_tools.rebuild
           vars:
             openhpc_enable:
               batch: "{{ inventory_hostname in groups['cluster_compute'] }}"
