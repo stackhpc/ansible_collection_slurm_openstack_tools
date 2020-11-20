@@ -47,7 +47,7 @@ Including an example of how to use your role (for instance, with variables passe
       become: true
       tasks:
         - import_role:
-            name: stackhpc.slurm_tools.openhpc_rebuild
+            name: stackhpc.slurm_openstack_tools.openhpc_rebuild
           vars:
             openhpc_enable:
               batch: "{{ inventory_hostname in groups['cluster_compute'] }}"
