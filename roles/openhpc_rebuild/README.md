@@ -5,12 +5,13 @@ Enable the compute nodes of a Slurm-based OpenHPC cluster on Openstack to be rei
 
 Once this playbook has run, from a Slurm node run:
 
-    scontrol reboot [ASAP] reason="rebuild image:<image_id>" [<NODES>]
+    scontrol reboot [ASAP] [nextstate=<RESUME|DOWN>] reason="rebuild image:<image_id>" [<NODES>]
 
 to rebuild the selected nodes with the given image. Note that:
 - If "ASAP" is included, the rebuild will happen as soon as existing jobs on the node(s) complete - no new jobs will be scheduled on it
 - If "reason" does not start with "rebuild" (or a node is not provisioned on Openstack) node(s) will simply reboot.
 - If "image:<image_id>" is not specified the node(s) will be rebuilt with the existing image.
+- Without "nextstate" nodes remain in DRAIN state after the rebuild.
 
 Requirements
 ------------

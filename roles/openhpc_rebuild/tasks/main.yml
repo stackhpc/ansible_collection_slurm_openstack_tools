@@ -29,8 +29,8 @@
     - name: install slurm-openstack-tools
       shell: |
         source /opt/slurm-tools/bin/activate
-        pip install --user pip
-        pip install --user git+https://github.com/stackhpc/slurm-openstack-tools.git
+        pip install pip
+        pip install git+https://github.com/stackhpc/slurm-openstack-tools.git
       args:
         creates: /opt/slurm-tools/bin/slurm-openstack-rebuild
   when: openhpc_enable.batch
