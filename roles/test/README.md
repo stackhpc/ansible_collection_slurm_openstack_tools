@@ -1,17 +1,28 @@
-Role Name
+stackhpc.slurm_openstack_tools.test
 =========
 
-A brief description of the role goes here.
+Tests of MPI functionality on a Slurm-based OpenHPC cluster.
+
+Currently the role assumes there is a single Slurm partition, and tests all the nodes in that partition.
+
+Tests (with corresponding tags) are:
+- `pingpong`: Runs Intel MPI Benchmark's IMB-MPI1 pingpong between a pair of (scheduler-selected) nodes. Reports zero-size message latency and maximum bandwidth.
+- `pingmatrix`: Runs a similar pingpong test but between all pairs of nodes. Reports zero-size message latency & maximum bandwidth.
+- `hpl-solo`: Runs HPL **separately** on all nodes, using 80% of memory, reporting Gflops on each node. **NB:** Set `openhpc_hpl_NB` as described below.
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Requires a Centos 8 / OpenHPC v2 -based cluster as it uses the Openmpi4 package with UCX provided by v2.
+- `/opt` must be exported from a login node to all compute notes, as software is only installed on the login node. TODO: maybe role should do that and undo it?
+- A filesystem shared across the cluster.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+- `openhpc_tests_rootdir`: Required, path to directory to use for root of tests. Must be on a cluster shared filesystem. Directory will be created if missing.
+- `openhpc_tests_hpl_NB`: Optional, default `192`. The HPL block size "NB" - for Intel CPUs see [here](https://software.intel.com/content/www/us/en/develop/documentation/mkl-linux-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html).
+- `openhpc_tests_ucx_net_devices`: Optional, default `all`. Control which network device/interface to use, e.g. `mlx5_1:0`, as per `UCX_NET_DEVICES` ([docs](https://github.com/openucx/ucx/wiki/UCX-environment-parameters#setting-the-devices-to-use)). Note the default is probably not what you want.
 
 Dependencies
 ------------
@@ -21,18 +32,35 @@ A list of other roles hosted on Galaxy should go here, plus any details in regar
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+  - hosts: cluster
+    name: Export/mount /opt via NFS for ohcp and intel packages
+    become: yes
+    tasks:
+      - import_role:
+          name: ansible-role-cluster-nfs
+        vars:
+          nfs_enable:
+            server:  "{{ inventory_hostname in groups['cluster_login'] | first }}"
+            clients: "{{ inventory_hostname in groups['cluster_compute'] }}"
+          nfs_server: "{{ hostvars[groups['cluster_login'] | first ]['server_networks']['ilab'][0] }}"
+          nfs_export: "/opt"
+          nfs_client_mnt_point: "/opt"
+          
+  - hosts: cluster_login[0]
+    name: Run tests
+    tasks:
+      - import_role:
+          name: stackhpc.slurm_tools.openhpc_tests
+        vars:
+          openhpc_tests_rootdir: /mnt/nfs/ohcp-tests
+    
 
 License
 -------
 
-BSD
+Apache-2.0
+
 
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
