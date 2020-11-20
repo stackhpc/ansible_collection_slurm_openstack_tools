@@ -1,4 +1,4 @@
-Role Name
+stackhpc.slurm_openstack_tools.rebuild
 =========
 
 Enable the compute nodes of a Slurm-based OpenHPC cluster on Openstack to be reimaged from Slurm.
