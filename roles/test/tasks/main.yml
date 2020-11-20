@@ -10,7 +10,7 @@
     state: directory
     owner: "{{ ansible_user }}"
     mode: 0755
-  become: no
+  become: yes
   tags: always
 
 - name: IMB PingPong (2x scheduler-selected nodes)
