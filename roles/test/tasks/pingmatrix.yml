@@ -25,7 +25,7 @@
     content: |
       #!/usr/bin/bash
 
-      #SBATCH --ntasks={{ computes.stdout_lines[0].split()[3] }}
+      #SBATCH --ntasks={{ computes.stdout_lines | length }}
       #SBATCH --ntasks-per-node=1
       #SBATCH --output=%x.out
       #SBATCH --error=%x.out

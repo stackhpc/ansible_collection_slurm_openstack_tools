@@ -20,15 +20,17 @@
     path: "{{ jobdir }}"
     state: directory
     owner: "{{ ansible_user }}"
-- name: Get info about compute nodes
-  shell: sinfo -Nh
-  register:
-    num_compute
 - name: Get compute memory (in megabytes)
   command: free --mega
   delegate_to: "{{ groups['cluster_compute'][0] }}" # TODO: no way to deal with groups? Better to use `sinfo` but memory not set propery!
   register: free
-  connection: local # except this doesn't work
+  connection: local # FIXME: except this doesn't work
+- name: Get all nodes
+  shell: "sinfo --Node --noheader --format %N" # FIXME: assumes only one partition, although excluding nodes not in the default partition should be fine.
+  register: all_nodes
+- name: Calculate excluded nodes
+  set_fact:
+    excluded_nodes: "{{ all_nodes.stdout_lines | difference(computes.stdout_lines) }}"
 - name: Create sbatch script
   copy:
     dest: "{{ jobdir }}/hpl-solo.sh"
@@ -39,7 +41,11 @@
       #SBATCH --output=%x.%a.out
       #SBATCH --error=%x.%a.out
       #SBATCH --exclusive
-
+      #SBATCH --array=0-{{ computes.stdout_lines | length - 1 }}
+      {% if excluded_nodes | length > 0 %}
+      #SBATCH --exclude={{ excluded_nodes | join(',') }}
+      {% endif %}
+      
       source /opt/intel/compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
       source /opt/intel/compilers_and_libraries/linux/mkl/bin/mklvars.sh intel64
       export I_MPI_DEBUG=4 # puts Node name in output
@@ -49,7 +55,7 @@
       mpirun -perhost 1 -np 1 $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ (free.stdout_lines[1].split()[1] | int * 0.8)}} -b {{ openhpc_tests_hpl_NB }} -p 1 -q 1
 
 - name: Run hpl
-  shell: sbatch --array=0-{{ num_compute.stdout_lines | count - 1 }} --wait hpl-solo.sh
+  shell: sbatch --wait hpl-solo.sh
   become: no
   register:
   args:
@@ -61,7 +67,7 @@
     chdir: "{{ jobdir }}"
   changed_when: false
   register: passed
-  failed_when: "passed.stdout_lines | length != num_compute.stdout_lines | length"
+  failed_when: "passed.stdout_lines | length != computes.stdout_lines | length"
 - name: Extract performance
   tags: grep
   shell: "grep '^W[R|C]' *.out"
@@ -72,6 +78,6 @@
 - tags: grep
   debug:
     msg: "{{ item[1].split()[0] }}: {{ item[0].split()[6] }} Gflops"
-  loop: "{{ perf.stdout_lines | zip(num_compute.stdout_lines) | list }}"
+  loop: "{{ perf.stdout_lines | zip(computes.stdout_lines) | list }}"
   loop_control:
       label: "{{ item[0].split(':')[0] }}" # filename

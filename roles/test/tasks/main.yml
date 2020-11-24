@@ -14,12 +14,15 @@
   tags: always
 
 - name: Get info about compute nodes
-  shell: "sinfo --noheader{%if openhpc_tests_nodes is defined %} --nodes {{openhpc_tests_nodes}}{% endif %}"
+  shell: "sinfo --Node --noheader{%if openhpc_tests_nodes is defined %} --nodes {{openhpc_tests_nodes}}{% endif %} --format %N"
   register:
     computes
   changed_when: false
   tags: always
   failed_when: computes.rc != 0 or (computes.stdout_lines | length == 0)
+- debug:
+    msg: "computes = {{ computes.stdout_lines }}"
+  tags: always
 
 - name: IMB PingPong (2x scheduler-selected nodes)
   block:
