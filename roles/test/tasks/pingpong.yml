@@ -19,8 +19,10 @@
       #SBATCH --output=%x.out
       #SBATCH --error=%x.out
       #SBATCH --exclusive
+      {%if openhpc_tests_nodes is defined %}#SBATCH --nodelist={{ openhpc_tests_nodes }}{% endif %}
       
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
+      echo SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST
       module load gnu9/9.3.0
       module load openmpi4/4.0.4
       module load imb/2019.6
@@ -35,8 +37,12 @@
   read_imb_pingpong:
     path: "{{ jobdir }}/ping.sh.out"
   register: ping_out
+- name: Read nodes used
+  shell: "grep 'SLURM_JOB_NODELIST:' {{ jobdir }}/ping.sh.out"
+  register: run_nodes
 - debug: 
     msg: |
       Summary:
+        - Nodes: {{ run_nodes.stdout.split()[1] }}
         - Zero-size msg latency: {{ ping_out['columns']['latency'][0] }} us
         - Max bandwidth: {{ ping_out['columns']['bandwidth'] | max }} Mbytes/s
