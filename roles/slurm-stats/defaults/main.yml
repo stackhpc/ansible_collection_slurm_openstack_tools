@@ -1,0 +1,26 @@
+---
+
+# Override cron module parameters when creating slurm-stats cron job e.g:
+# slurm_stats_cron_overrides:
+#   minute: "*/10"
+slurm_stats_cron_overrides: {}
+
+# Override copy module parameters when creating log-rotate file e.g
+# slurm_stats_log_rotate_overrides:
+#   dest: /etc/logrotate.d/another-path
+#   content: "{{ omit }}"
+#   src: my-custom-content
+slurm_stats_log_rotate_overrides: {}
+
+####################
+# log rotate options
+####################
+
+# These options affect the contents of the log-rotate file.
+# See: man logrotate
+
+# Log files are rotated count times before being removed
+slurm_stats_log_rotate_content_rotate: 7
+
+# How frequently are the log files rotated. Can be one of daily, monthly, ...
+slurm_stats_log_rotate_content_frequency: daily
