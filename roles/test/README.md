@@ -23,6 +23,7 @@ Role Variables
 - `openhpc_tests_rootdir`: Required, path to directory to use for root of tests. Must be on a cluster shared filesystem. Directory will be created if missing.
 - `openhpc_tests_hpl_NB`: Optional, default `192`. The HPL block size "NB" - for Intel CPUs see [here](https://software.intel.com/content/www/us/en/develop/documentation/mkl-linux-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html).
 - `openhpc_tests_ucx_net_devices`: Optional, default `all`. Control which network device/interface to use, e.g. `mlx5_1:0`, as per `UCX_NET_DEVICES` ([docs](https://github.com/openucx/ucx/wiki/UCX-environment-parameters#setting-the-devices-to-use)). Note the default is probably not what you want.
+- `openhpc_tests_nodes`: Optional. If set, only run jobs on these nodes, otherwise all nodes in the cluster will be used. Takes a slurm node expression, e.g. "compute-[0-15,19]".
 
 Dependencies
 ------------

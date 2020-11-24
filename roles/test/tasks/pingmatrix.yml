@@ -9,11 +9,6 @@
     state: directory
     owner: "{{ ansible_user }}"
     mode: 0755
-- name: Get info about compute nodes
-  shell: sinfo -Nh
-  register:
-    num_compute
-  changed_when: false
 - name: Download source code
   get_url:
     dest: "{{ jobdir }}/mpi_nxnlatbw.c"
@@ -30,11 +25,12 @@
     content: |
       #!/usr/bin/bash
 
-      #SBATCH --ntasks={{ num_compute.stdout_lines | count }}
+      #SBATCH --ntasks={{ computes.stdout_lines | count }}
       #SBATCH --ntasks-per-node=1
       #SBATCH --output=%x.out
       #SBATCH --error=%x.out
       #SBATCH --exclusive
+      {%if openhpc_tests_nodes is defined %}#SBATCH --nodelist={{ openhpc_tests_nodes }}{% endif %}
 
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
       module load gnu9/9.3.0
