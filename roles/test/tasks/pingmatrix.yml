@@ -13,6 +13,7 @@
   shell: sinfo -Nh
   register:
     num_compute
+  changed_when: false
 - name: Download source code
   get_url:
     dest: "{{ jobdir }}/mpi_nxnlatbw.c"
@@ -57,3 +58,4 @@
   fetch:
     src: "{{ jobdir }}/pingmatrix.html"
     dest: /tmp/pingmatrix.html
+    flat: yes
