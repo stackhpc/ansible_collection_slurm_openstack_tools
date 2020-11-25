@@ -45,3 +45,14 @@
     jobdir: "{{ openhpc_tests_rootdir }}/hpl-solo"
     impi_ver: 2019.6-088 # NB: not exposing these as role vars as not all work!
     mkl_ver: 2020.0-088
+
+- name: HPL (individual nodes)
+  # NB: This uses the precompiled HPL provided with MKL so runs a single MPI process per node, with TBB threads added automatically by MKL to use all cores
+  # See https://software.intel.com/content/www/us/en/develop/documentation/mkl-windows-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/ease-of-use-command-line-parameters.html
+  block:
+    - include: hpl-all.yml
+  tags: hpl-all
+  vars:
+    jobdir: "{{ openhpc_tests_rootdir }}/hpl-all"
+    impi_ver: 2019.6-088 # NB: not exposing these as role vars as not all work!
+    mkl_ver: 2020.0-088
