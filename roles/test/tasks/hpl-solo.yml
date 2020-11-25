@@ -22,11 +22,10 @@
     owner: "{{ ansible_user }}"
 - name: Get compute memory (in megabytes)
   command: free --mega
-  delegate_to: "{{ groups['cluster_compute'][0] }}" # TODO: no way to deal with groups? Better to use `sinfo` but memory not set propery!
+  delegate_to: "{{ groups['cluster_compute'][0] }}"
   register: free
-  connection: local # FIXME: except this doesn't work
 - name: Get all nodes
-  shell: "sinfo --Node --noheader --format %N" # FIXME: assumes only one partition, although excluding nodes not in the default partition should be fine.
+  shell: "sinfo --Node --noheader --format %N" # TODO: assumes only one partition, although actually excluding nodes not in the default partition should be fine.
   register: all_nodes
 - name: Calculate excluded nodes
   set_fact:

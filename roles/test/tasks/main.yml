@@ -20,9 +20,6 @@
   changed_when: false
   tags: always
   failed_when: computes.rc != 0 or (computes.stdout_lines | length == 0)
-- debug:
-    msg: "computes = {{ computes.stdout_lines }}"
-  tags: always
 
 - name: IMB PingPong (2x scheduler-selected nodes)
   block:
