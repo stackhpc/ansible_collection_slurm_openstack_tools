@@ -54,7 +54,7 @@
       source /opt/intel/compilers_and_libraries/linux/mkl/bin/mklvars.sh intel64
       export I_MPI_DEBUG=4 # puts Node name in output
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
-      export UCX_TLS=tcp # TODO: don't want this generally
+      #export UCX_TLS=tcp # TODO: don't want this generally
       export I_MPI_PMI_LIBRARY=/lib64/libpmi.so # TODO: requires slurm-libpmi-ohpc installed
 
       cp $MKLROOT/benchmarks/mp_linpack/HPL.dat .
