@@ -1,0 +1,88 @@
+- name: Add Intel repos
+  command: yum-config-manager --add-repo https://yum.repos.intel.com/setup/intelproducts.repo
+  args:
+    creates: /etc/yum.repos.d/intelproducts.repo
+  become: yes
+- name: Import Intel GPG keys
+  command: rpm --import https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
+  become: yes
+  # TODO: make idempotent
+- name: Install Intel MPI
+  yum:
+    name: "intel-mpi-{{ impi_ver }}"
+  become: yes
+- name: Make directory
+  file:
+    path: "{{ jobdir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+- name: Create sbatch script
+  copy:
+    dest: "{{ jobdir }}/{{ item.key }}.sh"
+    content: |
+      #!/usr/bin/bash
+
+      #SBATCH --ntasks=2
+      #SBATCH --ntasks-per-node=1
+      #SBATCH --output=%x.out
+      #SBATCH --error=%x.out
+      #SBATCH --exclusive
+      {%if openhpc_tests_nodes is defined %}#SBATCH --nodelist={{ openhpc_tests_nodes }}{% endif %}
+      
+      source /opt/intel/compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
+      export I_MPI_DEBUG=4 # puts Node name in output
+      export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
+      echo SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST
+      
+      {{ item.value }}
+      
+      echo Done.
+
+  loop: "{{ openhpc_tests_slurm_intel_opts | dict2items }}"
+#- meta: end_play
+- name: Run pingpong
+  include_tasks: run.yml
+  loop: "{{ openhpc_tests_slurm_intel_opts.keys() }}"
+  #loop: "{{ ['srun-libpmi'] }}"
+- name: Check for successes
+  shell:
+    cmd: "grep 'Done\\.' *.out"
+  args:
+    chdir: "{{ jobdir }}"
+  register: grep_done
+  ignore_errors: true
+- name: Show successful runs
+  debug:
+    msg: "{{ grep_done.stdout_lines | join('\n') }}"
+
+
+
+  
+    
+  
+
+# - shell: "squeue -j {{ mpd.stdout }} --format %T --noheader"
+#   register: squeue
+#   retries: 5
+#   delay: 2
+#   until: squeue.stdout == ''
+#   ignore_errors: true
+# - debug:
+#     var: squeue
+# - shell: "scancel {{ mpd.stdout }}"
+#   when: squeue.failed
+# - name: cancel job
+  # shell: "scancel
+# - name: Read pingpong
+#   read_imb_pingpong:
+#     path: "{{ jobdir }}/ping.sh.out"
+#   register: ping_out
+# - name: Read nodes used
+#   shell: "grep 'SLURM_JOB_NODELIST:' {{ jobdir }}/ping.sh.out"
+#   register: run_nodes
+# - debug: 
+#     msg: |
+#       Summary:
+#         - Nodes: {{ run_nodes.stdout.split()[1] }}
+#         - Zero-size msg latency: {{ ping_out['columns']['latency'][0] }} us
+#         - Max bandwidth: {{ ping_out['columns']['bandwidth'] | max }} Mbytes/s

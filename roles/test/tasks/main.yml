@@ -56,3 +56,12 @@
     jobdir: "{{ openhpc_tests_rootdir }}/hpl-all"
     impi_ver: 2019.6-088 # NB: not exposing these as role vars as not all work!
     mkl_ver: 2020.0-088
+
+- name: Intel MPI check
+  block:
+    - include: test-impi.yml
+  tags: test-impi
+  vars:
+    jobdir: "{{ openhpc_tests_rootdir }}/test-impi"
+    impi_ver: 2019.6-088 # NB: not exposing these as role vars as not all work!
+    mkl_ver: 2020.0-088

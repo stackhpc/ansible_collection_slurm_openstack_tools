@@ -2,3 +2,22 @@
 # defaults file for openhpc_tests
 openhpc_tests_ucx_net_devices: all # as per UCX default
 openhpc_tests_hpl_NB: 192
+openhpc_tests_slurm_intel_opts:
+      mpd: |
+        echo "Option 1: mpd"
+        export I_MPI_PROCESS_MANAGER=mpd
+        mpirun -n 2 IMB-MPI1 pingpong
+        unset I_MPI_PROCESS_MANAGER
+      hydra-ssh: |
+        echo "Option 2a: Hydra/ssh"
+        mpirun -bootstrap slurm -n 2 IMB-MPI1 pingpong
+      hydra-srun: |
+        echo "Option 2b: Hydra/srun"
+        mpirun -n 2 IMB-MPI1 pingpong
+      mpiexec-hydra: |
+        echo "Option 3: mpiexec.hydra"
+        mpiexec.hydra -bootstrap slurm -n 2 IMB-MPI1 pingpong
+      srun-libpmi: |
+        echo "Option 4: slurm-libpmi-ohpc"
+        export I_MPI_PMI_LIBRARY=/lib64/libpmi.so
+        srun IMB-MPI1 pingpong

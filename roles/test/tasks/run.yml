@@ -1,0 +1,22 @@
+- name: submit job {{ item }}
+  shell:
+    cmd: "sbatch --parsable {{ item }}.sh"
+  args:
+    chdir: "{{ jobdir }}"
+  register: sbatch
+- name: wait for job {{ item }} to start running
+  shell: "squeue -j {{ sbatch.stdout }} --noheader --format %T"
+  register: jobstart
+  retries: 5
+  delay: 1
+  until: jobstart.stdout == "RUNNING"
+- name: wait for job {{ item }} to stop running
+  shell: "squeue -j {{ sbatch.stdout }} --noheader --format %T"
+  register: jobdone
+  retries: 3
+  delay: 10
+  until: jobdone.stdout == ""
+  ignore_errors: true
+- name: cancel job {{ item }}
+  shell: "scancel {{ sbatch.stdout }}"
+  when: jobdone.failed
