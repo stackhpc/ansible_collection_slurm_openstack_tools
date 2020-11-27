@@ -1,19 +1,5 @@
-- name: Add Intel repos
-  command: yum-config-manager --add-repo https://yum.repos.intel.com/setup/intelproducts.repo
-  args:
-    creates: /etc/yum.repos.d/intelproducts.repo
-  become: yes
-- name: Import Intel GPG keys
-  command: rpm --import https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
-  become: yes
-  # TODO: make idempotent
-- name: Install Intel MPI
-  yum:
-    name: "intel-mpi-{{ impi_ver }}"
-  become: yes
-- name: Install MKL
-  yum:
-    name: "intel-mkl-{{ mkl_ver }}"
+- name: Add Intel packages
+  include: intel.yml
   become: yes
 - name: Make directory
   file:
@@ -26,17 +12,13 @@
   register: free
 - name: Calculate total memory target
   set_fact:
-    mem_target: "{{ (free.stdout_lines[1].split()[1] | int * 0.8) | int }}" 
-- debug:
-    msg: "Memory target: {{ mem_target }} MB (80% of each node)" # Intel don't tell you but the -b flag appears to be per node or process, not total!
+    mem_target: "{{ (free.stdout_lines[1].split()[1] | int *  openhpc_tests_hpl_mem_frac) | int }}" # Intel don't tell you but the -b flag appears to be per node or process, not total!
 - name: "Calculate process grid (P and Q)"
   hpl:
     num_processes: "{{ computes.stdout_lines | length }}"
   register: pq
 - debug:
-    msg: "Using P={{ pq.grid.P }} Q={{ pq.grid.Q }}"
-#- meta: end_play
-
+    msg: "Using P={{ pq.grid.P }} Q={{ pq.grid.Q }} for {{ computes.stdout_lines | length }} processes targeting {{ mem_target }} MB ({{  openhpc_tests_hpl_mem_frac * 100 }}% of each node)"
 - name: Create sbatch script
   copy:
     dest: "{{ jobdir }}/hpl-all.sh"
@@ -50,11 +32,11 @@
       #SBATCH --exclusive
       {%if openhpc_tests_nodes is defined %}#SBATCH --nodelist={{ openhpc_tests_nodes }}{% endif %}
       
-      source /opt/intel/compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
-      source /opt/intel/compilers_and_libraries/linux/mkl/bin/mklvars.sh intel64
+      source  {{ openhpc_tests_intel_pkgs.impi.path }}/mpivars.sh
+      source {{ openhpc_tests_intel_pkgs.mkl.path }}/mklvars.sh intel64
       export I_MPI_DEBUG=4 # puts Node name in output
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
-      export I_MPI_PMI_LIBRARY=/lib64/libpmi.so # TODO: requires slurm-libpmi-ohpc installed
+      export I_MPI_PMI_LIBRARY=/lib64/libpmi.so # NB: requires slurm-libpmi-ohpc installed
 
       cp $MKLROOT/benchmarks/mp_linpack/HPL.dat .
       srun $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ mem_target }} -b {{ openhpc_tests_hpl_NB }} -p {{ pq.grid.P }} -q {{ pq.grid.Q }}
