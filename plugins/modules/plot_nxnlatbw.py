@@ -32,7 +32,7 @@ options:
         type: str
    nodes:
         description:
-            - Comma-separated list of nodenames to label RANKS with
+            - Comma-separated list of nodenames to label RANKS with - NB this should be provided in the same order as ranks
 requirements:
     - "python >= 3.6"
 author:
@@ -73,7 +73,7 @@ def run_module():
     dest = module.params["dest"]
     nodes = module.params["nodes"]
     if nodes is not None:
-        nodes = sorted(nodes.split(',')) # sbatch manpage says it sorts `--nodelist` arg so do a sort here too
+        nodes = nodes.split(',')
     
     if module.check_mode:
         module.exit_json(**result)
@@ -96,7 +96,10 @@ def run_module():
     # get list of node IDs:
     rankAs = sorted(set(k[0] for k in latencies))
     rankBs = sorted(set(k[1] for k in latencies))
-    # TODO: crosscheck these!
+    if rankAs != rankBs:
+        module.fail_json("Ranks extracted from result columns differed", **result)
+    if nodes and len(nodes) != len(rankAs):
+        module.fail_json("Results contained %i ranks but %i node names provided" % (len(rankAs), len(nodes)), **result)
 
     # find min values:
     min_lat = min(latencies.values())
