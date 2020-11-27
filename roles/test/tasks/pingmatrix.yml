@@ -42,10 +42,14 @@
   become: no
   args:
     chdir: "{{ jobdir }}"
+- name: Expand node list
+  shell: "scontrol show hostnames {{ openhpc_tests_nodes }}"
+  register: slurm_names
 - name: Process output
   plot_nxnlatbw:
     src: "{{ jobdir }}/pingmatrix.sh.out"
     dest: "{{ jobdir }}/pingmatrix.html"
+    nodes: "{{ slurm_names.stdout_lines | join(',') }}"
   register: nxnlatbw
 - name: Summarise results
   debug:

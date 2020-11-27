@@ -30,6 +30,9 @@ options:
             - Path to write html file with latency table
         required: true
         type: str
+   nodes:
+        description:
+            - Comma-separated list of nodenames to label RANKS with
 requirements:
     - "python >= 3.6"
 author:
@@ -60,6 +63,7 @@ def run_module():
     module_args = dict(
         src=dict(type="str", required=True),
         dest=dict(type="str", required=True),
+        nodes=dict(type="str", required=False, default=None)
     )
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
@@ -67,7 +71,9 @@ def run_module():
     
     src = module.params["src"]
     dest = module.params["dest"]
-    nodes = [] # TODO: take from another file?
+    nodes = module.params["nodes"]
+    if nodes is not None:
+        nodes = sorted(nodes.split(',')) # sbatch manpage says it sorts `--nodelist` arg so do a sort here too
     
     if module.check_mode:
         module.exit_json(**result)
