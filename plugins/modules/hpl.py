@@ -14,11 +14,11 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = """
 ---
-module: TODO
-short_description: Takes number of processes and returns a dict with keys 'P' and 'Q' giving appropriate values, i.e. with Q equal or slightly larger than P and P * Q == num_processes 
+module: hpl
+short_description: Calculate P and Q values for HPL.
 version_added: "0.0"
 description:
-    - "TODO"
+    - "Takes number of processes and returns a dict with keys 'P' and 'Q' giving appropriate values, i.e. with Q equal or slightly larger than P and P * Q == num_processes."
 options:
     num_processes:
         description:
