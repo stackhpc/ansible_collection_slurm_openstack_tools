@@ -51,7 +51,7 @@
   args:
     chdir: "{{ jobdir }}"
 - name: Check HPL completed OK
-  tags: grep
+  tags: postpro
   shell: "grep '1 tests completed and passed residual checks' *.out"
   args:
     chdir: "{{ jobdir }}"
@@ -59,15 +59,24 @@
   register: passed
   failed_when: "passed.stdout_lines | length != computes.stdout_lines | length"
 - name: Extract performance
-  tags: grep
+  tags: postpro
   shell: "grep '^W[R|C]' *.out"
   args:
     chdir: "{{ jobdir }}"
   changed_when: false
   register: perf
-- tags: grep
+- tags: postpro
   debug:
     msg: "{{ item[1].split()[0] }}: {{ item[0].split()[6] | float }} Gflops"
   loop: "{{ perf.stdout_lines | zip(computes.stdout_lines) | list }}"
   loop_control:
       label: "{{ item[0].split(':')[0] }}" # filename
+- tags: postpro
+  set_fact:
+    gflops_total: "{{ gflops_total | default(0.0) | int + item.split()[6] | float }}"
+  loop: "{{ perf.stdout_lines }}"
+  loop_control:
+    label: "{{ item.split()[6] }}"
+- tags: postpro
+  debug:
+    msg: "Mean [{{ computes.stdout_lines | length }} nodes]: {{ gflops_total | float / (computes.stdout_lines | length) }} Gflops"
