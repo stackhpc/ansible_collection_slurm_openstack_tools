@@ -42,10 +42,24 @@
   become: no
   args:
     chdir: "{{ jobdir }}"
+# nxnlatbw outputs ranks, not nodenames which would be more useful for finding issues. The sbatch manpage says nodes provided via --nodelist are sorted, but doesn't specify how.
+# Some testing using a "helloworld" program showed it is NOT sorted the same as python's sorted(), it's lexicographical. So we use scontrol to guarantee the same sort order.
+# Note this still doesn't fix any non-unique names but we should get a length mis-match at least with that.
+# although this looks a bit crazy:
+- name: Expand node list
+  shell: "scontrol show hostnames {{ openhpc_tests_nodes }}"
+  register: scontrol_hostnames
+- name: Create sorted node expression
+  shell: "scontrol show hostlistsorted {{ scontrol_hostnames.stdout_lines | join(',') }}"
+  register: scontrol_hostlistsorted
+- name: Expand node list again
+  shell: "scontrol show hostnames {{ scontrol_hostlistsorted.stdout_lines | join(',') }}"
+  register: slurm_names
 - name: Process output
   plot_nxnlatbw:
     src: "{{ jobdir }}/pingmatrix.sh.out"
     dest: "{{ jobdir }}/pingmatrix.html"
+    nodes: "{{ slurm_names.stdout_lines | join(',') }}"
   register: nxnlatbw
 - name: Summarise results
   debug:

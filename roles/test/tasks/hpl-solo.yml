@@ -1,19 +1,5 @@
-- name: Add Intel repos
-  command: yum-config-manager --add-repo https://yum.repos.intel.com/setup/intelproducts.repo
-  args:
-    creates: /etc/yum.repos.d/intelproducts.repo
-  become: yes
-- name: Import Intel GPG keys
-  command: rpm --import https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
-  become: yes
-  # TODO: make idempotent
-- name: Install Intel MPI
-  yum:
-    name: "intel-mpi-{{ impi_ver }}"
-  become: yes
-- name: Install MKL
-  yum:
-    name: "intel-mkl-{{ mkl_ver }}"
+- name: Add Intel packages
+  include: intel.yml
   become: yes
 - name: Make directory
   file:
@@ -24,6 +10,11 @@
   command: free --mega
   delegate_to: "{{ groups['cluster_compute'][0] }}"
   register: free
+- name: Calculate total memory target
+  set_fact:
+    mem_target: "{{ (free.stdout_lines[1].split()[1] | int *  openhpc_tests_hpl_mem_frac) | int }}" # Intel don't tell you but the -b flag appears to be per node or process, not total!
+- debug:
+    msg: "Using 1 process per node targeting {{ mem_target }} MB ({{  openhpc_tests_hpl_mem_frac * 100 }}% of each node)"
 - name: Get all nodes
   shell: "sinfo --Node --noheader --format %N" # TODO: assumes only one partition, although actually excluding nodes not in the default partition should be fine.
   register: all_nodes
@@ -51,7 +42,7 @@
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
       
       cp $MKLROOT/benchmarks/mp_linpack/HPL.dat .
-      mpirun -perhost 1 -np 1 $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ (free.stdout_lines[1].split()[1] | int * 0.8)}} -b {{ openhpc_tests_hpl_NB }} -p 1 -q 1
+      mpirun -perhost 1 -np 1 $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ mem_target }} -b {{ openhpc_tests_hpl_NB }} -p 1 -q 1
 
 - name: Run hpl
   shell: sbatch --wait hpl-solo.sh
@@ -60,7 +51,7 @@
   args:
     chdir: "{{ jobdir }}"
 - name: Check HPL completed OK
-  tags: grep
+  tags: postpro
   shell: "grep '1 tests completed and passed residual checks' *.out"
   args:
     chdir: "{{ jobdir }}"
@@ -68,15 +59,24 @@
   register: passed
   failed_when: "passed.stdout_lines | length != computes.stdout_lines | length"
 - name: Extract performance
-  tags: grep
+  tags: postpro
   shell: "grep '^W[R|C]' *.out"
   args:
     chdir: "{{ jobdir }}"
   changed_when: false
   register: perf
-- tags: grep
+- tags: postpro
   debug:
-    msg: "{{ item[1].split()[0] }}: {{ item[0].split()[6] }} Gflops"
+    msg: "{{ item[1].split()[0] }}: {{ item[0].split()[6] | float }} Gflops"
   loop: "{{ perf.stdout_lines | zip(computes.stdout_lines) | list }}"
   loop_control:
       label: "{{ item[0].split(':')[0] }}" # filename
+- tags: postpro
+  set_fact:
+    gflops_total: "{{ gflops_total | default(0.0) | int + item.split()[6] | float }}"
+  loop: "{{ perf.stdout_lines }}"
+  loop_control:
+    label: "{{ item.split()[6] }}"
+- tags: postpro
+  debug:
+    msg: "Mean [{{ computes.stdout_lines | length }} nodes]: {{ gflops_total | float / (computes.stdout_lines | length) }} Gflops"

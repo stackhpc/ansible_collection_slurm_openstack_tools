@@ -30,6 +30,9 @@ options:
             - Path to write html file with latency table
         required: true
         type: str
+   nodes:
+        description:
+            - Comma-separated list of nodenames to label RANKS with - NB this should be provided in the same order as ranks
 requirements:
     - "python >= 3.6"
 author:
@@ -60,6 +63,7 @@ def run_module():
     module_args = dict(
         src=dict(type="str", required=True),
         dest=dict(type="str", required=True),
+        nodes=dict(type="str", required=False, default=None)
     )
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
@@ -67,7 +71,9 @@ def run_module():
     
     src = module.params["src"]
     dest = module.params["dest"]
-    nodes = [] # TODO: take from another file?
+    nodes = module.params["nodes"]
+    if nodes is not None:
+        nodes = nodes.split(',')
     
     if module.check_mode:
         module.exit_json(**result)
@@ -90,7 +96,10 @@ def run_module():
     # get list of node IDs:
     rankAs = sorted(set(k[0] for k in latencies))
     rankBs = sorted(set(k[1] for k in latencies))
-    # TODO: crosscheck these!
+    if rankAs != rankBs:
+        module.fail_json("Ranks extracted from result columns differed", **result)
+    if nodes and len(nodes) != len(rankAs):
+        module.fail_json("Results contained %i ranks but %i node names provided" % (len(rankAs), len(nodes)), **result)
 
     # find min values:
     min_lat = min(latencies.values())
