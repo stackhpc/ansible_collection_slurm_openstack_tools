@@ -2,14 +2,10 @@
 - name: install python3
   package:
     name: python3,git
-- name: create venv
-  command: python3 -m venv /opt/slurm-tools
-  args:
-    creates: /opt/slurm-tools
-- name: install slurm-openstack-tools
-  shell: |
-    source /opt/slurm-tools/bin/activate
-    pip install pip
-    pip install git+https://github.com/stackhpc/slurm-openstack-tools.git
-  args:
-    creates: /opt/slurm-tools/bin
+
+- name: Create virtualenv
+  pip:
+    name: git+https://github.com/stackhpc/slurm-openstack-tools.git
+    virtualenv: /opt/slurm-tools
+    virtualenv_command: python3 -m venv
+  become: true
