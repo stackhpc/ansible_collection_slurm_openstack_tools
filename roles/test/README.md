@@ -8,7 +8,7 @@ Currently the role assumes there is a single Slurm partition, and tests all the 
 Tests (with corresponding tags) are:
 - `pingpong`: Runs Intel MPI Benchmark's IMB-MPI1 pingpong between a pair of (scheduler-selected) nodes. Reports zero-size message latency and maximum bandwidth.
 - `pingmatrix`: Runs a similar pingpong test but between all pairs of nodes. Reports zero-size message latency & maximum bandwidth.
-- `hpl-solo`: Runs HPL **separately** on all nodes, using 80% of memory, reporting Gflops on each node. **NB:** Set `openhpc_hpl_NB` as described below.
+- `hpl-solo`: Runs HPL **separately** on all nodes, using 80% of memory, reporting Gflops on each node. **NB:** Set `openhpc_tests_hpl.NB` as described below.
 
 Requirements
 ------------
@@ -22,8 +22,9 @@ Role Variables
 
 - `openhpc_tests_rootdir`: Required, path to directory to use for root of tests. Must be on a cluster shared filesystem. Directory will be created if missing.
 - `openhpc_tests_hpl_NB`: Optional, default `192`. The HPL block size "NB" - for Intel CPUs see [here](https://software.intel.com/content/www/us/en/develop/documentation/mkl-linux-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html).
+- `openhpc_tests_hpl_mem_frac`: Optional, default `0.8`. The HPL problem size "N" will be selected to target using this fraction of each node's memory.
 - `openhpc_tests_ucx_net_devices`: Optional, default `all`. Control which network device/interface to use, e.g. `mlx5_1:0`, as per `UCX_NET_DEVICES` ([docs](https://github.com/openucx/ucx/wiki/UCX-environment-parameters#setting-the-devices-to-use)). Note the default is probably not what you want.
-- `openhpc_tests_nodes`: Optional. If set, only run jobs on these nodes, otherwise all nodes in first partition shown by `sinfo` will be used. Takes a slurm node expression, e.g. "compute-[0-15,19]".
+- `openhpc_tests_nodes`: Optional. A Slurm node expression, e.g. "compute-[0-15,19]" defining the nodes to use. If not set all nodes in the default partition are used.
 
 Dependencies
 ------------
