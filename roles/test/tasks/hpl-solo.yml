@@ -36,13 +36,13 @@
       #SBATCH --exclude={{ excluded_nodes | join(',') }}
       {% endif %}
       
-      source /opt/intel/compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
-      source /opt/intel/compilers_and_libraries/linux/mkl/bin/mklvars.sh intel64
+      source  {{ openhpc_tests_intel_pkgs.impi.path }}/mpivars.sh
+      source {{ openhpc_tests_intel_pkgs.mkl.path }}/mklvars.sh intel64
       export I_MPI_DEBUG=4 # puts Node name in output
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
       
       cp $MKLROOT/benchmarks/mp_linpack/HPL.dat .
-      mpirun -perhost 1 -np 1 $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ mem_target }} -b {{ openhpc_tests_hpl_NB }} -p 1 -q 1
+      srun $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ mem_target }} -b {{ openhpc_tests_hpl_NB }} -p 1 -q 1
 
 - name: Run hpl
   shell: sbatch --wait hpl-solo.sh
