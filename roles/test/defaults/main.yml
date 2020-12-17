@@ -5,7 +5,7 @@ openhpc_tests_hpl_mem_frac: 0.8
 openhpc_tests_intel_pkgs:
   impi:
     package: intel-mpi-2019.9-912
-    path: /opt/intel/compilers_and_libraries_2020.0.166/linux/mpi/intel64/bin/
+    path: /opt/intel/compilers_and_libraries_2020.4.304/linux/mpi/intel64/bin/
   mkl:
     package: intel-mkl-2020.4-912
     path: /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/bin/
