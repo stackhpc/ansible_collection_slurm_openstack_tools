@@ -4,9 +4,9 @@
 # Currently need to run with something like:
 #   ANSIBLE_LIBRARY=. ansible-playbook -i inventory test.yml
 
-- name: Create test root directory
+- name: Create test root and ./installs directories
   file:
-    path: "{{ openhpc_tests_rootdir }}"
+    path: "{{ openhpc_tests_rootdir }}/installs"
     state: directory
     owner: "{{ ansible_user }}"
     mode: 0755

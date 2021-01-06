@@ -13,14 +13,14 @@ Tests (with corresponding tags) are:
 Requirements
 ------------
 
-- Requires a Centos 8 / OpenHPC v2 -based cluster as it uses the Openmpi4 package with UCX provided by v2.
-- `/opt` must be exported from a login node to all compute notes, as software is only installed on the login node. TODO: maybe role should do that and undo it?
+- Requires a Centos 8 / OpenHPC v2 -based cluster as it uses the Openmpi4 package with UCX provided by v2 and requires `dnf`.
 - A filesystem shared across the cluster.
+- `slurm-libpmi-ohpc` to be installed on all nodes
 
 Role Variables
 --------------
 
-- `openhpc_tests_rootdir`: Required, path to directory to use for root of tests. Must be on a cluster shared filesystem. Directory will be created if missing.
+- `openhpc_tests_rootdir`: Required, path to directory to use for root of tests. This must be an absolute path and must be on a cluster shared filesystem. Directory will be created if missing. Test software will be installed in a chroot `installs/` subdirectory.
 - `openhpc_tests_hpl_NB`: Optional, default `192`. The HPL block size "NB" - for Intel CPUs see [here](https://software.intel.com/content/www/us/en/develop/documentation/mkl-linux-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html).
 - `openhpc_tests_hpl_mem_frac`: Optional, default `0.8`. The HPL problem size "N" will be selected to target using this fraction of each node's memory.
 - `openhpc_tests_ucx_net_devices`: Optional, default `all`. Control which network device/interface to use, e.g. `mlx5_1:0`, as per `UCX_NET_DEVICES` ([docs](https://github.com/openucx/ucx/wiki/UCX-environment-parameters#setting-the-devices-to-use)). Note the default is probably not what you want.
@@ -33,21 +33,11 @@ A list of other roles hosted on Galaxy should go here, plus any details in regar
 
 Example Playbook
 ----------------
-
-  - hosts: cluster
-    name: Export/mount /opt via NFS for ohcp and intel packages
-    become: yes
+  - hosts: all
+    name: Install slurm-libpmi-ohpc
     tasks:
-      - import_role:
-          name: ansible-role-cluster-nfs
-        vars:
-          nfs_enable:
-            server:  "{{ inventory_hostname in groups['cluster_login'] | first }}"
-            clients: "{{ inventory_hostname in groups['cluster_compute'] }}"
-          nfs_server: "{{ hostvars[groups['cluster_login'] | first ]['server_networks']['ilab'][0] }}"
-          nfs_export: "/opt"
-          nfs_client_mnt_point: "/opt"
-          
+      - yum:
+          name: slurm-libpmi-ohpc
   - hosts: cluster_login[0]
     name: Run tests
     tasks:

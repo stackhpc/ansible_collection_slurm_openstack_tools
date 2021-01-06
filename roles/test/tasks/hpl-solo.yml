@@ -36,8 +36,8 @@
       #SBATCH --exclude={{ excluded_nodes | join(',') }}
       {% endif %}
       
-      source  {{ openhpc_tests_intel_pkgs.impi.path }}/mpivars.sh
-      source {{ openhpc_tests_intel_pkgs.mkl.path }}/mklvars.sh intel64
+      source  {{ openhpc_tests_rootdir }}/installs/{{ openhpc_tests_intel_pkgs.impi.path }}/mpivars.sh
+      source {{ openhpc_tests_rootdir }}/installs/{{ openhpc_tests_intel_pkgs.mkl.path }}/mklvars.sh intel64
       export I_MPI_DEBUG=4 # puts Node name in output
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
       

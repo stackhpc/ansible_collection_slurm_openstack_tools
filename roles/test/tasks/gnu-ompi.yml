@@ -1,0 +1,21 @@
+- name: Install gnu 9 + openmpi (w/ ucx) + performance tools OHPC packages
+  dnf:
+    name: ohpc-gnu9-openmpi4-perf-tools
+    installroot: "{{ openhpc_tests_rootdir }}/installs"
+  become: yes
+- name: Find modulefiles
+  find:
+    paths:
+      - "{{ openhpc_tests_rootdir }}/installs/opt/ohpc/pub/modulefiles"
+      - "{{ openhpc_tests_rootdir }}/installs/opt/ohpc/pub/moduledeps"
+    file_type: file
+    recurse: yes
+  register: modulefiles
+- name: Rewrite modulefile paths
+  replace:
+    path: "{{ item.path }}"
+    regexp: "(?<!{{ openhpc_tests_rootdir }}/installs)/opt/ohpc" # -ve lookbehind assertion to avoid adding the prefix again when rerunning
+    replace: "{{ openhpc_tests_rootdir }}/installs/opt/ohpc"
+  loop: "{{ modulefiles.files }}"
+  loop_control:
+    label: "{{ item.path }}"  

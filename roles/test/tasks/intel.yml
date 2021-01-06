@@ -8,8 +8,9 @@
   become: yes
   # TODO: make idempotent
 - name: Install Intel MPI packages
-  yum:
+  dnf:
     name: "{{ item.value.package }}"
+    installroot: "{{ openhpc_tests_rootdir }}/installs"
   become: yes
   loop: "{{ openhpc_tests_intel_pkgs | dict2items }}"
 
