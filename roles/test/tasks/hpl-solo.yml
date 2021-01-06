@@ -7,12 +7,11 @@
     state: directory
     owner: "{{ ansible_user }}"
 - name: Get compute memory (in megabytes)
-  command: free --mega
-  delegate_to: "{{ groups['cluster_compute'][0] }}"
+  command: "sinfo --noheader --Format Memory --node {{ computes.stdout_lines[0] }}" # first node
   register: free
 - name: Calculate total memory target
   set_fact:
-    mem_target: "{{ (free.stdout_lines[1].split()[1] | int *  openhpc_tests_hpl_mem_frac) | int }}" # Intel don't tell you but the -b flag appears to be per node or process, not total!
+    mem_target: "{{ (free.stdout.strip() | int *  openhpc_tests_hpl_mem_frac) | int }}" # Intel don't tell you but the -b flag appears to be per node or process, not total!
 - debug:
     msg: "Using 1 process per node targeting {{ mem_target }} MB ({{  openhpc_tests_hpl_mem_frac * 100 }}% of each node)"
 - name: Get all nodes
