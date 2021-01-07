@@ -1,19 +1,17 @@
 stackhpc.slurm_openstack_tools.test
 =========
 
-Tests of MPI functionality on a Slurm-based OpenHPC cluster.
-
-Currently the role assumes there is a single Slurm partition, and tests all the nodes in that partition.
+Tests of MPI functionality on a Slurm-based OpenHPC cluster. Currently it assumes there is a single Slurm partition, and tests some or all of the nodes in that partition.
 
 Tests (with corresponding tags) are:
 - `pingpong`: Runs Intel MPI Benchmark's IMB-MPI1 pingpong between a pair of (scheduler-selected) nodes. Reports zero-size message latency and maximum bandwidth.
 - `pingmatrix`: Runs a similar pingpong test but between all pairs of nodes. Reports zero-size message latency & maximum bandwidth.
 - `hpl-solo`: Runs HPL **separately** on all nodes, using 80% of memory, reporting Gflops on each node. **NB:** Set `openhpc_tests_hpl.NB` as described below.
+- `hpl-all`: Runs HPL on all nodes, using 80% of memory, reporting total Gflops. **NB:** Set `openhpc_tests_hpl.NB` as described below.
 
 See ansible output for summarised results and paths to detailed results files.
 
-For repeatability with minimal impact on compute nodes this role installs the packages required for the tests onto a login node, then exports that node's `/opt` to all other nodes in the play over NFS. 
-This mount is reversed when the tests complete but see the "Cleanup" section below for limitations.
+Note this role is intended as a post-deployment test for a cluster to which you have root access - it should **not** be used on a system running production jobs as they are likely to get broken by the reconfiguration it does. For repeatability with minimal impact on compute nodes it installs the packages required for the tests onto a login node, then exports that node's `/opt` to all other nodes in the play over NFS. This mount is reversed when the tests complete but see the "Cleanup" section below for limitations.
 
 Requirements
 ------------
