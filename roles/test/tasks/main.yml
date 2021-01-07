@@ -1,8 +1,8 @@
 ---
 # NB: this only works on centos 8 / ohpc v2 as we want UCX
 # TODO: add support for groups/partitions
-# Currently need to run with something like:
-#   ANSIBLE_LIBRARY=. ansible-playbook -i inventory test.yml
+
+# Cleanup limitations: app packages not removed from login, nfs packages aren't removed from all hosts (might have been installed for something else), exports isn't reverted
 
 - name: Create test root directory
   file:
@@ -11,7 +11,22 @@
     owner: "{{ ansible_user }}"
     mode: 0755
   become: yes
-  tags: always
+  run_once: yes
+  tags: always, setup
+
+- name: Export/mount login's /opt over nfs
+  import_role:
+    name: stackhpc.nfs
+  vars:
+    nfs_enable:
+      server: "{{ true if ansible_hostname == openhpc_slurm_login else false }}"
+      clients: "{{ true if ansible_hostname != openhpc_slurm_login else false }}"
+    nfs_server: "{{ openhpc_slurm_login }}"
+    nfs_export: "/opt"
+    nfs_client_mnt_point: "/opt"
+    nfs_client_mnt_state: "mounted"
+  tags: always, setup
+  become: yes
 
 - name: Get info about compute nodes
   shell: "sinfo --Node --noheader{%if openhpc_tests_nodes is defined %} --nodes {{openhpc_tests_nodes}}{% endif %} --format %N"
@@ -20,6 +35,7 @@
   changed_when: false
   tags: always
   failed_when: computes.rc != 0 or (computes.stdout_lines | length == 0)
+  run_once: yes
 
 - name: IMB PingPong (2x scheduler-selected nodes)
   block:
@@ -27,13 +43,15 @@
   tags: pingpong
   vars:
     jobdir: "{{ openhpc_tests_rootdir }}/pingpong"
+  when: inventory_hostname == openhpc_slurm_login
 
-- name: Ping matrix (all nodes)
+- name: Ping matrix (all selected nodes)
   block:
     - include: pingmatrix.yml
   tags: pingmatrix
   vars:
     jobdir: "{{ openhpc_tests_rootdir }}/pingmatrix"
+  when: inventory_hostname == openhpc_slurm_login
 
 - name: HPL (individual nodes)
   # NB: This uses the precompiled HPL provided with MKL so runs a single MPI process per node, with TBB threads added automatically by MKL to use all cores
@@ -45,6 +63,7 @@
     jobdir: "{{ openhpc_tests_rootdir }}/hpl-solo"
     impi_ver: 2019.6-088 # NB: not exposing these as role vars as not all work!
     mkl_ver: 2020.0-088
+  when: inventory_hostname == openhpc_slurm_login
 
 - name: HPL (individual nodes)
   # NB: This uses the precompiled HPL provided with MKL so runs a single MPI process per node, with TBB threads added automatically by MKL to use all cores
@@ -56,3 +75,28 @@
     jobdir: "{{ openhpc_tests_rootdir }}/hpl-all"
     impi_ver: 2019.6-088 # NB: not exposing these as role vars as not all work!
     mkl_ver: 2020.0-088
+  when: inventory_hostname == openhpc_slurm_login
+
+- name: Remove /opt mount
+  import_role:
+    name: stackhpc.nfs
+  vars:
+    nfs_enable:
+      server: "{{ true if ansible_hostname == openhpc_slurm_login else false }}"
+      clients: "{{ true if ansible_hostname != openhpc_slurm_login else false }}"
+    nfs_server: "{{ openhpc_slurm_login }}"
+    nfs_export: "/opt"
+    nfs_client_mnt_point: "/opt"
+    nfs_client_mnt_state: "absent"
+  ignore_errors: yes # /opt won't be empty
+  tags: always, cleanup
+  become: yes
+
+- name: Remove /opt export definition
+  lineinfile:
+    path: /etc/exports
+    regexp: '^\/opt\s+'
+    state: absent
+  notify: re-export filesystem # from stackhpc.nfs role
+  tags: always, cleanup
+  become: yes

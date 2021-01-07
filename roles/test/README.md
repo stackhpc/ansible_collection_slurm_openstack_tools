@@ -10,17 +10,23 @@ Tests (with corresponding tags) are:
 - `pingmatrix`: Runs a similar pingpong test but between all pairs of nodes. Reports zero-size message latency & maximum bandwidth.
 - `hpl-solo`: Runs HPL **separately** on all nodes, using 80% of memory, reporting Gflops on each node. **NB:** Set `openhpc_tests_hpl.NB` as described below.
 
+See ansible output for summarised results and paths to detailed results files.
+
+For repeatability with minimal impact on compute nodes this role installs the packages required for the tests onto a login node, then exports that node's `/opt` to all other nodes in the play over NFS. 
+This mount is reversed when the tests complete but see the "Cleanup" section below for limitations.
+
 Requirements
 ------------
 
-- Requires a Centos 8 / OpenHPC v2 -based cluster as it uses the Openmpi4 package with UCX provided by v2.
-- `/opt` must be exported from a login node to all compute notes, as software is only installed on the login node. TODO: maybe role should do that and undo it?
-- A filesystem shared across the cluster.
+- A Centos 8 / OpenHPC v2 -based cluster as it uses the Openmpi4 package with UCX provided by v2.
+- The `slurm-libpmi-ohpc` package installed on all nodes (done by default by `stackhpc.openhpc` galaxy role).
+- A filesystem shared across the cluster and writeable from all nodes.
 
 Role Variables
 --------------
 
-- `openhpc_tests_rootdir`: Required, path to directory to use for root of tests. Must be on a cluster shared filesystem. Directory will be created if missing.
+- `openhpc_tests_rootdir`: Required, path to directory to use for root of tests. Must be on a cluster shared filesystem writeable from all nodes. Directory will be created if missing.
+- `openhpc_slurm_login`: Required, inventory name for login node to use.
 - `openhpc_tests_hpl_NB`: Optional, default `192`. The HPL block size "NB" - for Intel CPUs see [here](https://software.intel.com/content/www/us/en/develop/documentation/mkl-linux-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html).
 - `openhpc_tests_hpl_mem_frac`: Optional, default `0.8`. The HPL problem size "N" will be selected to target using this fraction of each node's memory.
 - `openhpc_tests_ucx_net_devices`: Optional, default `all`. Control which network device/interface to use, e.g. `mlx5_1:0`, as per `UCX_NET_DEVICES` ([docs](https://github.com/openucx/ucx/wiki/UCX-environment-parameters#setting-the-devices-to-use)). Note the default is probably not what you want.
@@ -29,33 +35,30 @@ Role Variables
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+- `stackhpc.nfs` >= v20.11.1 (needs client mount state option)
 
 Example Playbook
 ----------------
 
-  - hosts: cluster
-    name: Export/mount /opt via NFS for ohcp and intel packages
-    become: yes
+  - hosts: all
     tasks:
       - import_role:
-          name: ansible-role-cluster-nfs
-        vars:
-          nfs_enable:
-            server:  "{{ inventory_hostname in groups['cluster_login'] | first }}"
-            clients: "{{ inventory_hostname in groups['cluster_compute'] }}"
-          nfs_server: "{{ hostvars[groups['cluster_login'] | first ]['server_networks']['ilab'][0] }}"
-          nfs_export: "/opt"
-          nfs_client_mnt_point: "/opt"
-          
-  - hosts: cluster_login[0]
-    name: Run tests
-    tasks:
-      - import_role:
-          name: stackhpc.slurm_tools.openhpc_tests
+          name: stackhpc.slurm_openstack_tools.test
         vars:
           openhpc_tests_rootdir: /mnt/nfs/ohcp-tests
-    
+          openhpc_tests_hpl_NB: 192
+          openhpc_slurm_login: "{{ groups['cluster_login'] | first }}"
+
+Cleanup
+-------
+At the end of the play:
+- On the compute nodes `/opt` is unmounted and the fstab entry removed.
+- On the login node the `/opt` export is removed.
+
+However the following are left as-is as they may not have been changed by this role:
+- Installs of test packages on the login node.
+- Installs of NFS packages.
+- NFS services are left running
 
 License
 -------
