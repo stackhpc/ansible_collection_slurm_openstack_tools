@@ -42,7 +42,7 @@
   register: run_nodes
 - debug: 
     msg: |
-      Summary:
-        - Nodes: {{ run_nodes.stdout.split()[1] }}
-        - Zero-size msg latency: {{ ping_out['columns']['latency'][0] }} us
-        - Max bandwidth: {{ ping_out['columns']['bandwidth'] | max }} Mbytes/s
+      Summary for pingpong (2x scheduler-selected nodes):
+      nodes: {{ run_nodes.stdout.split()[1] }}
+      zero-size msg latency: {{ ping_out['columns']['latency'][0] }} us
+      max bandwidth: {{ ping_out['columns']['bandwidth'] | max }} Mbytes/s

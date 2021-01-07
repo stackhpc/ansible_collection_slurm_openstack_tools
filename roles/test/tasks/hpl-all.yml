@@ -62,5 +62,6 @@
   register: perf
 - tags: grep2
   debug:
-    #msg: "{{ perf.stdout_lines }}"
-    msg: "{{ perf.stdout_lines[0].split()[6] | float }} Gflops"
+    msg: |
+      Summary for hpl-all:
+      total gflops: {{ perf.stdout_lines[0].split()[6] | float }}

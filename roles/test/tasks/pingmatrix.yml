@@ -61,11 +61,14 @@
     dest: "{{ jobdir }}/pingmatrix.html"
     nodes: "{{ slurm_names.stdout_lines | join(',') }}"
   register: nxnlatbw
-- name: Summarise results
-  debug:
-    msg: "{{ nxnlatbw['stats'] }}"
-- name: Fetch html table to /tmp/pingmatrix.html
+- name: Fetch html results table to ansible control host
   fetch:
     src: "{{ jobdir }}/pingmatrix.html"
     dest: /tmp/pingmatrix.html
     flat: yes
+- name: Summarise results
+  debug:
+    msg: |
+      Summary for pingmatrix (pairwise on {{ slurm_names.stdout_lines | length }} nodes):
+      {{ nxnlatbw['stats'] | to_nice_yaml }}
+      Tabular output on ansible control host at {{ jobdir }}/pingmatrix.html
