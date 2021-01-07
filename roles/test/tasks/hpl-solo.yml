@@ -79,4 +79,6 @@
     label: "{{ item.split()[6] }}"
 - tags: postpro
   debug:
-    msg: "Mean [{{ computes.stdout_lines | length }} nodes]: {{ gflops_total | float / (computes.stdout_lines | length) }} Gflops"
+    msg: |
+      Summary for hpl-solo ({{ computes.stdout_lines | length }} nodes):
+      mean gflops: {{ gflops_total | float / (computes.stdout_lines | length) }}
