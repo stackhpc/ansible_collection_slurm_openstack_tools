@@ -11,28 +11,24 @@
   become: true
 
 - name: Create cron job
-  vars:
-    defaults:
-      name: Generate slurm stats
-      minute: "*/5"
-      user: root
-      # NOTE: lasttimestamp is stored at /root/lasttimestamp
-      job: "TZ=UTC /opt/slurm-tools/bin/slurm-stats >> /var/log/slurm-stats/finished_jobs.json"
-      cron_file: slurm-stats
-  cron: "{{ defaults | combine(slurm_stats_cron_overrides) }}"
+  cron:
+    name: Generate slurm stats
+    minute: "*/5"
+    user: root
+    # NOTE: lasttimestamp is stored at /root/lasttimestamp
+    job: "TZ=UTC /opt/slurm-tools/bin/slurm-stats >> /var/log/slurm-stats/finished_jobs.json"
+    cron_file: slurm-stats
   become: true
 
 - name: Setup log rotate
-  vars:
-    defaults:
-      content: |
-        # WARNING: This file is managed by ansible, do not modify.
-        /var/log/slurm-stats/finished_jobs.json {
-                {{ slurm_stats_log_rotate_content_frequency }}
-                rotate {{ slurm_stats_log_rotate_content_rotate }}
-                compress
-                delaycompress
-        }
-      dest: /etc/logrotate.d/slurm-stats
-  copy: "{{ defaults | combine(slurm_stats_log_rotate_overrides) }}"
+  copy:
+    content: |
+      # WARNING: This file is managed by ansible, do not modify.
+      /var/log/slurm-stats/finished_jobs.json {
+              {{ slurm_stats_log_rotate_content_frequency }}
+              rotate {{ slurm_stats_log_rotate_content_rotate }}
+              compress
+              delaycompress
+      }
+    dest: /etc/logrotate.d/slurm-stats
   become: true
