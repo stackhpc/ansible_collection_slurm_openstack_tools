@@ -1,7 +1,8 @@
 stackhpc.slurm_openstack_tools.slurm-stats
-=========
+==========================================
 
-Configures slurm-stats from https://github.com/stackhpc/slurm-openstack-tools.git.
+Configures slurm-stats from https://github.com/stackhpc/slurm-openstack-tools.git which
+transforms sacct output into a form that is more amenable for importing into elasticsearch/loki.
 
 Requirements
 ------------
