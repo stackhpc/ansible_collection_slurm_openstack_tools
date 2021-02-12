@@ -3,9 +3,20 @@
   package:
     name: python3,git
 
-- name: Create virtualenv
-  pip:
-    name: git+https://github.com/stackhpc/slurm-openstack-tools.git
-    virtualenv: /opt/slurm-tools
-    virtualenv_command: python3 -m venv
+- block:
+  - name: Upgrade pip
+    # This needs to a separate step so that we use the updated version
+    # to install the packages below.
+    pip:
+      name: pip
+
+  - name: Create virtualenv
+    pip:
+      name: git+https://github.com/stackhpc/slurm-openstack-tools.git
+
+  module_defaults:
+    ansible.builtin.pip:
+      virtualenv: /opt/slurm-tools
+      virtualenv_command: python3 -m venv
+      state: latest
   become: true
