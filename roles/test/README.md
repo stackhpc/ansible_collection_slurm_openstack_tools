@@ -38,6 +38,7 @@ Dependencies
 Example Playbook
 ----------------
 
+```yaml
   - hosts: all
     tasks:
       - import_role:
@@ -46,6 +47,7 @@ Example Playbook
           openhpc_tests_rootdir: /mnt/nfs/ohcp-tests
           openhpc_tests_hpl_NB: 192
           openhpc_slurm_login: "{{ groups['cluster_login'] | first }}"
+```
 
 Cleanup
 -------
