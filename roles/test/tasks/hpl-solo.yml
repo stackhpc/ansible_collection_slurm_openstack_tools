@@ -59,25 +59,19 @@
   failed_when: "passed.stdout_lines | length != computes.stdout_lines | length"
 - name: Extract performance
   tags: postpro
-  shell: "grep '^W[R|C]' *.out"
+  shell: "grep '^W[R|C]' *.out | tr -s ' ' | cut -d ' ' -f 7" # tr -s squeezes multiple spaces to single, then take gfops column
   args:
     chdir: "{{ jobdir }}"
   changed_when: false
   register: perf
-- tags: postpro
-  debug:
-    msg: "{{ item[1].split()[0] }}: {{ item[0].split()[6] | float }} Gflops"
-  loop: "{{ perf.stdout_lines | zip(computes.stdout_lines) | list }}"
-  loop_control:
-      label: "{{ item[0].split(':')[0] }}" # filename
-- tags: postpro
-  set_fact:
-    gflops_total: "{{ gflops_total | default(0.0) | int + item.split()[6] | float }}"
-  loop: "{{ perf.stdout_lines }}"
-  loop_control:
-    label: "{{ item.split()[6] }}"
-- tags: postpro
+- name: Summarise results
+  tags: postpro
   debug:
     msg: |
       Summary for hpl-solo ({{ computes.stdout_lines | length }} nodes):
-      mean gflops: {{ gflops_total | float / (computes.stdout_lines | length) }}
+        Max:  {{ perf.stdout_lines | map('float') | max }} gflops
+        Min:  {{ perf.stdout_lines | map('float') | min }} gflops
+        Mean: {{ (perf.stdout_lines | map('float') | sum) /  (computes.stdout_lines | length) }} gflops
+
+      Individual node results (gflops):
+      {{ dict(computes.stdout_lines | zip(perf.stdout_lines | map('float') )) | to_nice_yaml }}
