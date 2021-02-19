@@ -71,4 +71,4 @@
     msg: |
       Summary for pingmatrix (pairwise on {{ slurm_names.stdout_lines | length }} nodes):
       {{ nxnlatbw['stats'] | to_nice_yaml }}
-      Tabular output on ansible control host at {{ jobdir }}/pingmatrix.html
+      Tabular output on ansible control host at /tmp/pingmatrix.html
