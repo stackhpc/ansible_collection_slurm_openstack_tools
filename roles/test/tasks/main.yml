@@ -18,13 +18,14 @@
   import_role:
     name: stackhpc.nfs
   vars:
-    nfs_enable:
-      server: "{{ true if ansible_hostname == openhpc_slurm_login else false }}"
-      clients: "{{ true if ansible_hostname != openhpc_slurm_login else false }}"
-    nfs_server: "{{ openhpc_slurm_login }}"
-    nfs_export: "/opt"
-    nfs_client_mnt_point: "/opt"
-    nfs_client_mnt_state: "mounted"
+    nfs_configurations:
+      - nfs_enable:
+          server: "{{ true if ansible_hostname == openhpc_slurm_login else false }}"
+          clients: "{{ true if ansible_hostname != openhpc_slurm_login else false }}"
+        nfs_server: "{{ openhpc_slurm_login }}"
+        nfs_export: "/opt"
+        nfs_client_mnt_point: "/opt"
+        nfs_client_mnt_state: "mounted"
   tags: always, setup
   become: yes
 
