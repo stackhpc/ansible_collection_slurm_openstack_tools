@@ -58,8 +58,15 @@
   register: passed
   failed_when: "passed.stdout_lines | length != computes.stdout_lines | length"
 - name: Extract performance
+  # example of HPL output block - NB code review shows T/V can start with WR or WC:
+  #   <snip>
+  #   T/V                N    NB     P     Q               Time                 Gflops
+  #   --------------------------------------------------------------------------------
+  #   WC00C2R2      110592   256     1     1            2545.90            3.54199e+02
+  #   HPL_pdgesv() start time Thu Feb 25 19:58:25 2021
+  #   <snip>
   tags: postpro
-  shell: "grep '^W[R|C]' *.out | tr -s ' ' | cut -d ' ' -f 7" # tr -s squeezes multiple spaces to single, then take gfops column
+  shell: "grep '^W[R|C]' *.out | tr -s ' ' | cut -d ' ' -f 7" # tr -s squeezes multiple spaces to single, then take gflops column
   args:
     chdir: "{{ jobdir }}"
   changed_when: false
