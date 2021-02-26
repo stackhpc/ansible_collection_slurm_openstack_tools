@@ -2,7 +2,7 @@
 # NB: this only works on centos 8 / ohpc v2 as we want UCX
 # TODO: add support for groups/partitions
 
-# Cleanup limitations: app packages not removed from login, nfs packages aren't removed from all hosts (might have been installed for something else), exports isn't reverted
+# Cleanup limitations: app packages not removed from login, nfs packages aren't removed from all hosts (might have been installed for something else)
 
 - name: Create test root directory
   file:
