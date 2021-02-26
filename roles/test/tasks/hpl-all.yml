@@ -1,6 +1,3 @@
-- name: Add Intel packages
-  include: intel.yml
-  become: yes
 - name: Make directory
   file:
     path: "{{ jobdir }}"

@@ -4,62 +4,9 @@
 
 # Cleanup limitations: app packages not removed from login, nfs packages aren't removed from all hosts (might have been installed for something else)
 
-- name: Create test root directory
-  file:
-    path: "{{ openhpc_tests_rootdir }}"
-    state: directory
-    owner: "{{ ansible_user }}"
-    mode: 0755
-  become: yes
-  run_once: yes
-  tags: always, setup
-
-- name: Install nfs packages
-  yum:
-    name: nfs-utils
-    state: present
-  become: yes
-  tags: always, setup # TODO: add this to more
-
-- name: Temporarily export application directores from login
-  command:
-    cmd: "exportfs -o rw,insecure,no_root_squash *:{{ item }}"
-  loop: "{{ openhpc_tests_app_dirs }}"
-  become: yes
-  when: ansible_hostname == openhpc_slurm_login
-  # NB is exporting directories which don't exist ok?
-
-- name: Ensure nfs services are running
-  service:
-    name: nfs-server
-    state: started
-  become: yes
-  when: ansible_hostname == openhpc_slurm_login
-
-- name: Ensure application directories exist
-  file:
-    path: "{{ item }}"
-    state: directory
-    # assumes the parent exists, that's ok here
-  loop: "{{ openhpc_tests_app_dirs }}"
-  become: yes
-  when: ansible_hostname != openhpc_slurm_login
-
-- name: Temporarily mount application directories
-  command:
-    cmd: "mount -t nfs {{ openhpc_slurm_login }}:{{ item }} {{ item }}"
-  loop: "{{ openhpc_tests_app_dirs }}"
-  become: yes
-  when: ansible_hostname != openhpc_slurm_login
-
-- name: Get info about compute nodes
-  shell: "sinfo --Node --noheader{%if openhpc_tests_nodes is defined %} --nodes {{openhpc_tests_nodes}}{% endif %} --format %N"
-  register:
-    computes
-  changed_when: false
+- import_tasks: setup.yml
   tags: always
-  failed_when: computes.rc != 0 or (computes.stdout_lines | length == 0)
-  run_once: yes
+  become: yes
 
 - name: IMB PingPong (2x scheduler-selected nodes)
   block:
@@ -101,16 +48,6 @@
     mkl_ver: 2020.0-088
   when: inventory_hostname == openhpc_slurm_login
 
-- name: Unmount application directories
-  command:
-    cmd: "umount {{ item }}"
-  loop: "{{ openhpc_tests_app_dirs }}"
-  become: yes
-  when: ansible_hostname != openhpc_slurm_login
-
-- name: Unexport application directories
-  command:
-    cmd: "exportfs -u *:{{ item }}"
-  loop: "{{ openhpc_tests_app_dirs }}"
-  become: yes
-  when: ansible_hostname == openhpc_slurm_login
+# - import_tasks: cleanup.yml
+#   tags: always
+#   become: yes

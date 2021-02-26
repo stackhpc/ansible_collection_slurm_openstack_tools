@@ -2,14 +2,11 @@
   command: yum-config-manager --add-repo https://yum.repos.intel.com/setup/intelproducts.repo
   args:
     creates: /etc/yum.repos.d/intelproducts.repo
-  become: yes
 - name: Import Intel GPG keys
   command: rpm --import https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
-  become: yes
   # TODO: make idempotent
-- name: Install Intel MPI packages
+- name: Install Intel packages
   yum:
     name: "{{ item.value.package }}"
-  become: yes
   loop: "{{ openhpc_tests_intel_pkgs | dict2items }}"
 
