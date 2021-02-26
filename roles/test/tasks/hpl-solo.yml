@@ -43,7 +43,7 @@
       cp $MKLROOT/benchmarks/mp_linpack/HPL.dat .
       srun $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ mem_target }} -b {{ openhpc_tests_hpl_NB }} -p 1 -q 1
 
-- name: Run hpl
+- name: Run hpl-solo
   shell: sbatch --wait hpl-solo.sh
   become: no
   register:

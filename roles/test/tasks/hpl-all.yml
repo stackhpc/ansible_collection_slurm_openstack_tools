@@ -40,7 +40,7 @@
       cp $MKLROOT/benchmarks/mp_linpack/HPL.dat .
       srun $MKLROOT/benchmarks/mp_linpack/xhpl_intel64_dynamic -m {{ mem_target }} -b {{ openhpc_tests_hpl_NB }} -p {{ pq.grid.P }} -q {{ pq.grid.Q }}
 
-- name: Run hpl
+- name: Run hpl-all
   shell: sbatch --wait hpl-all.sh
   become: no
   register:
