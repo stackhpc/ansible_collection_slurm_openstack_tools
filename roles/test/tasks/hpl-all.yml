@@ -8,13 +8,13 @@
   register: free
 - name: Calculate total memory target
   set_fact:
-    mem_target: "{{ (free.stdout.strip() | int *  openhpc_tests_hpl_mem_frac) | int }}" # Intel don't tell you but the -b flag appears to be per node or process, not total!
+    mem_target: "{{ (free.stdout.strip() | int * ( openhpc_tests_hpl_mem_frac | float ) ) | int }}" # Intel don't tell you but the -b flag appears to be per node or process, not total!
 - name: "Calculate process grid (P and Q)"
   hpl:
     num_processes: "{{ computes.stdout_lines | length }}"
   register: pq
 - debug:
-    msg: "Using P={{ pq.grid.P }} Q={{ pq.grid.Q }} for {{ computes.stdout_lines | length }} processes targeting {{ mem_target }} MB ({{  openhpc_tests_hpl_mem_frac * 100 }}% of each node)"
+    msg: "Using P={{ pq.grid.P }} Q={{ pq.grid.Q }} for {{ computes.stdout_lines | length }} processes targeting {{ mem_target }} MB ({{  ( openhpc_tests_hpl_mem_frac | float ) * 100 }}% of each node)"
 - name: Create sbatch script
   copy:
     dest: "{{ jobdir }}/hpl-all.sh"
