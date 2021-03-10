@@ -2,40 +2,11 @@
 # NB: this only works on centos 8 / ohpc v2 as we want UCX
 # TODO: add support for groups/partitions
 
-# Cleanup limitations: app packages not removed from login, nfs packages aren't removed from all hosts (might have been installed for something else), exports isn't reverted
+# Cleanup limitations: app packages not removed from login, nfs packages aren't removed from all hosts (might have been installed for something else)
 
-- name: Create test root directory
-  file:
-    path: "{{ openhpc_tests_rootdir }}"
-    state: directory
-    owner: "{{ ansible_user }}"
-    mode: 0755
-  become: yes
-  run_once: yes
-  tags: always, setup
-
-- name: Export/mount login's /opt over nfs
-  import_role:
-    name: stackhpc.nfs
-  vars:
-    nfs_enable:
-      server: "{{ true if ansible_hostname == openhpc_slurm_login else false }}"
-      clients: "{{ true if ansible_hostname != openhpc_slurm_login else false }}"
-    nfs_server: "{{ openhpc_slurm_login }}"
-    nfs_export: "/opt"
-    nfs_client_mnt_point: "/opt"
-    nfs_client_mnt_state: "mounted"
-  tags: always, setup
-  become: yes
-
-- name: Get info about compute nodes
-  shell: "sinfo --Node --noheader{%if openhpc_tests_nodes is defined %} --nodes {{openhpc_tests_nodes}}{% endif %} --format %N"
-  register:
-    computes
-  changed_when: false
+- import_tasks: setup.yml
   tags: always
-  failed_when: computes.rc != 0 or (computes.stdout_lines | length == 0)
-  run_once: yes
+  become: yes
 
 - name: IMB PingPong (2x scheduler-selected nodes)
   block:
@@ -77,26 +48,6 @@
     mkl_ver: 2020.0-088
   when: inventory_hostname == openhpc_slurm_login
 
-- name: Remove /opt mount
-  import_role:
-    name: stackhpc.nfs
-  vars:
-    nfs_enable:
-      server: "{{ true if ansible_hostname == openhpc_slurm_login else false }}"
-      clients: "{{ true if ansible_hostname != openhpc_slurm_login else false }}"
-    nfs_server: "{{ openhpc_slurm_login }}"
-    nfs_export: "/opt"
-    nfs_client_mnt_point: "/opt"
-    nfs_client_mnt_state: "absent"
-  ignore_errors: yes # /opt won't be empty
-  tags: always, cleanup
-  become: yes
-
-- name: Remove /opt export definition
-  lineinfile:
-    path: /etc/exports
-    regexp: '^\/opt\s+'
-    state: absent
-  notify: re-export filesystem # from stackhpc.nfs role
-  tags: always, cleanup
+- import_tasks: cleanup.yml
+  tags: always
   become: yes

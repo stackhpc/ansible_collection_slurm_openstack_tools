@@ -1,0 +1,4 @@
+- name: Install gnu 9 + openmpi (w/ ucx) + performance tools
+  yum:
+    name: ohpc-gnu9-openmpi4-perf-tools
+    state: present

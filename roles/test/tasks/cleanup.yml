@@ -1,0 +1,13 @@
+- name: Unmount application directories
+  command:
+    cmd: "umount {{ item }}"
+  loop: "{{ openhpc_tests_app_dirs }}"
+  become: yes
+  when: ansible_hostname != openhpc_slurm_login
+
+- name: Unexport application directories
+  command:
+    cmd: "exportfs -u *:{{ item }}"
+  loop: "{{ openhpc_tests_app_dirs }}"
+  become: yes
+  when: ansible_hostname == openhpc_slurm_login

@@ -1,6 +1,3 @@
-- name: Add Intel packages
-  include: intel.yml
-  become: yes
 - name: Make directory
   file:
     path: "{{ jobdir }}"
@@ -11,9 +8,9 @@
   register: free
 - name: Calculate total memory target
   set_fact:
-    mem_target: "{{ (free.stdout.strip() | int *  openhpc_tests_hpl_mem_frac) | int }}" # Intel don't tell you but the -b flag appears to be per node or process, not total!
+    mem_target: "{{ (free.stdout.strip() | int * (openhpc_tests_hpl_mem_frac | float) ) | int }}" # Intel don't tell you but the -b flag appears to be per node or process, not total!
 - debug:
-    msg: "Using 1 process per node targeting {{ mem_target }} MB ({{  openhpc_tests_hpl_mem_frac * 100 }}% of each node)"
+    msg: "Using 1 process per node targeting {{ mem_target }} MB ({{  (openhpc_tests_hpl_mem_frac | float) * 100 }}% of each node)"
 - name: Get all nodes
   shell: "sinfo --Node --noheader --format %N" # TODO: assumes only one partition, although actually excluding nodes not in the default partition should be fine.
   register: all_nodes
