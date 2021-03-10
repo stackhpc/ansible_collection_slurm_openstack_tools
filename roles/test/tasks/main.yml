@@ -48,6 +48,6 @@
     mkl_ver: 2020.0-088
   when: inventory_hostname == openhpc_slurm_login
 
-# - import_tasks: cleanup.yml
-#   tags: always
-#   become: yes
+- import_tasks: cleanup.yml
+  tags: always
+  become: yes
