@@ -11,7 +11,7 @@
       source {{ openhpc_rebuild_clouds }}
       openstack token issue
     changed_when: false
-    no_log: True
+    no_log: true
   delegate_to: localhost
   delegate_facts: true
   run_once: true
