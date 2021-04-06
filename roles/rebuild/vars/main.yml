@@ -1,2 +1,4 @@
 ---
-# vars file for openhpc_rebuild
+# these are used to set openhpc_reboot_* variables
+openhpc_rebuild_program: /opt/slurm-tools/bin/slurm-openstack-rebuild
+openhpc_rebuild_from_controller: true

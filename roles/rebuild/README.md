@@ -18,35 +18,34 @@ Requirements
 
 - An OpenHPC cluster created using the `stackhpc.openhpc` role.
 
-
 Role Variables
 --------------
 
 - `openhpc_rebuild_clouds`: Optional, path to a `clouds.yaml` file containing a single cloud. Defaults to `~/.config/openstack/clouds.yaml`.
-- `openhpc_rebuild_reconfigure`: Optional bool, whether to reconfigure Slurm at the end of this role so `scontrol reboot ...` uses the new script. Default `true`.
-- `openhpc_enable.batch`: Set to `true` on compute nodes. Note this is the same variable as used in `stackhpc.openhpc`.
-
-
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+This role sets facts to control variables for the `stackhpc.openhpc` role, so it must be run in the same play and before that role. It only needs to run on the Slurm controller.
 
 Example Playbook
 ----------------
 
-    - hosts: cluster
+    - hosts: control
       name: Setup openstack rebuild script
       tags: rebuild
       become: true
       tasks:
         - import_role:
             name: stackhpc.slurm_openstack_tools.rebuild
-          vars:
-            openhpc_enable:
-              batch: "{{ inventory_hostname in groups['cluster_compute'] }}"
+    
+    - hosts: cluster
+      name: configure slurm
+      become: true
+      tasks:
+        import_role:
+          name: stackhpc.openhpc
+          ...
 
 
 License
@@ -57,4 +56,4 @@ Apache-2.0
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+stackhpc.com
