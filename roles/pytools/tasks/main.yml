@@ -12,7 +12,10 @@
 
   - name: Create virtualenv
     pip:
-      name: git+https://github.com/stackhpc/slurm-openstack-tools.git
+      name: git+https://github.com/stackhpc/slurm-openstack-tools.git#egg=slurm_openstack_tools
+      # can specify branch using an @<tag> too like
+      # git+https://github.com/celery/celery.git@v4.3.0#egg=celery
+      editable: yes
 
   module_defaults:
     ansible.builtin.pip:
