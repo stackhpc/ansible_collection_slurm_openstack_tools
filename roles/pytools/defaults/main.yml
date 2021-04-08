@@ -1,2 +1,3 @@
 ---
 # defaults file for pytools
+pytools_editable: false

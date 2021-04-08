@@ -12,7 +12,8 @@
 
   - name: Create virtualenv
     pip:
-      name: git+https://github.com/stackhpc/slurm-openstack-tools.git
+      name: "git+https://github.com/stackhpc/slurm-openstack-tools.git{{ '#egg=slurm_openstack_tools' if pytools_editable else ''}}"
+      editable: "{{ pytools_editable }}"
 
   module_defaults:
     ansible.builtin.pip:
