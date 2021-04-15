@@ -25,7 +25,7 @@ Role Variables
 
 - `openhpc_tests_rootdir`: Required, path to directory to use for root of tests. Must be on a cluster shared filesystem writeable from all nodes. Directory will be created if missing.
 - `openhpc_slurm_login`: Required, inventory name for login node to use.
-- `openhpc_tests_hpl_NB`: Optional, default `192`. The HPL block size "NB" - for Intel CPUs see [here](https://software.intel.com/content/www/us/en/develop/documentation/mkl-linux-developer-guide/top/intel-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html).
+- `openhpc_tests_hpl_NB`: Optional, default `192`. The HPL block size "NB" - for Intel CPUs see [here](https://software.intel.com/content/www/us/en/develop/documentation/onemkl-linux-developer-guide/top/intel-oneapi-math-kernel-library-benchmarks/intel-distribution-for-linpack-benchmark/configuring-parameters.html).
 - `openhpc_tests_hpl_mem_frac`: Optional, default `0.8`. The HPL problem size "N" will be selected to target using this fraction of each node's memory.
 - `openhpc_tests_ucx_net_devices`: Optional, default `all`. Control which network device/interface to use, e.g. `mlx5_1:0`, as per `UCX_NET_DEVICES` ([docs](https://github.com/openucx/ucx/wiki/UCX-environment-parameters#setting-the-devices-to-use)). Note the default is probably not what you want.
 - `openhpc_tests_nodes`: Optional. A Slurm node expression, e.g. "compute-[0-15,19]" defining the nodes to use. If not set all nodes in the default partition are used.
