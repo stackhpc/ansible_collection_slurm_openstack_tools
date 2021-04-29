@@ -37,7 +37,6 @@
   loop: "{{ openhpc_tests_app_dirs }}"
   when: ansible_hostname == openhpc_slurm_login
   # safe to re-run
-  # TODO: see if can use -v to make this idempotent?
 
 - name: Ensure application directories exist
   file:
