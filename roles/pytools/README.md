@@ -9,7 +9,7 @@ Requirements
 Role Variables
 --------------
 
-None.
+`pytools_editable`: Whether to install the package using `pip`'s editable mode (installing source to `/opt/slurm-tools/src`) - `true` or `false` (default).
 
 Dependencies
 ------------
