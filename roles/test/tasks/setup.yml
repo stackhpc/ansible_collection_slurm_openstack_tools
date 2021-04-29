@@ -25,18 +25,18 @@
     name: nfs-utils
     state: present
 
+- name: Ensure nfs services are running
+  service:
+    name: nfs-server
+    state: started
+  when: ansible_hostname == openhpc_slurm_login
+
 - name: Temporarily export application directores from login
   command:
     cmd: "exportfs -o rw,insecure,no_root_squash *:{{ item }}"
   loop: "{{ openhpc_tests_app_dirs }}"
   when: ansible_hostname == openhpc_slurm_login
   # safe to re-run
-
-- name: Ensure nfs services are running
-  service:
-    name: nfs-server
-    state: started
-  when: ansible_hostname == openhpc_slurm_login
 
 - name: Ensure application directories exist
   file:
