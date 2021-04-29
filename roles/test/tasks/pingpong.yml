@@ -18,11 +18,13 @@
       
       export UCX_NET_DEVICES={{ openhpc_tests_ucx_net_devices }}
       echo SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST
-      module load gnu9/9.3.0
-      module load openmpi4/4.0.4
-      module load imb/2019.6
+      module load gnu9
+      module load openmpi4
+      module load imb
 
-      srun --mpi=pmix_v3 IMB-MPI1 pingpong
+      #srun --mpi=pmi2 IMB-MPI1 pingpong # doesn't work in ohpc v2.1
+      mpirun IMB-MPI1 pingpong
+
 - name: Run pingpong
   shell: sbatch --wait ping.sh
   become: no
