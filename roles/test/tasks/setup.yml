@@ -58,5 +58,11 @@
   register:
     computes
   changed_when: false
-  failed_when: computes.rc != 0 or (computes.stdout_lines | length == 0)
+  failed_when: computes.rc != 0
+  run_once: yes
+
+- name: Check compute node selection valid
+  assert:
+    that: computes.stdout_lines | length > 0
+    fail_msg: "No nodes selected - was variable `openhpc_tests_nodes` set (correctly)?"
   run_once: yes
