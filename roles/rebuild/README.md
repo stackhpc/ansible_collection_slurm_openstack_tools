@@ -26,15 +26,7 @@ Role Variables
 - `openhpc_rebuild_reconfigure`: Optional bool, whether to reconfigure Slurm at the end of this role so `scontrol reboot ...` uses the new script. Default `true`.
 - `openhpc_enable.batch`: Set to `true` on compute nodes. Note this is the same variable as used in `stackhpc.openhpc`.
 
-It is recommended that the `openhpc_rebuild_clouds` is an [application credential](https://docs.openstack.org/keystone/latest/user/application_credentials.html). This can be created in Horizon via Identity > Application Credentials > +Create Application Credential. The usual role required is `member`. Access rules (if using Train or above) can be as below or similar:
-
-```yaml
-- service: compute
-  method: POST
-  path: /v2.1/servers
-```
-
-Note that the downloaded credential can be encrpyted using `ansible-vault` to allow commit to source control. It will automatically be decrypted when copied onto the compute nodes.
+It is recommended that the `openhpc_rebuild_clouds` is an [application credential](https://docs.openstack.org/keystone/latest/user/application_credentials.html). This can be created in Horizon via Identity > Application Credentials > +Create Application Credential. The usual role required is `member`. Using access rules has been found not to work at present. Note that the downloaded credential can be encrpyted using `ansible-vault` to allow commit to source control. It will automatically be decrypted when copied onto the compute nodes.
 
 Dependencies
 ------------
