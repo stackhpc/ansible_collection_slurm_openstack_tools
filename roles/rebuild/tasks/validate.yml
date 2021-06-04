@@ -6,6 +6,26 @@
     assert:
       that: openhpc_clouds_path.stat.exists
       fail_msg: "clouds.yaml file {{ openhpc_rebuild_clouds }} on localhost (specified by `openhpc_rebuild_clouds`) does not exist"
+      success_msg: "{{ openhpc_rebuild_clouds }} exists"
+  - name: Read clouds.yaml # handles encrpyted files
+    include_vars:
+      file: "{{ openhpc_rebuild_clouds }}"
+      name: openhpc_rebuild_clouds_content
+    no_log: "{{ openhpc_rebuild_no_log }}"
+  - debug:
+      msg: "{{ openhpc_rebuild_clouds_content }}"
+  - name: Check only one cloud defined
+    assert:
+      that: openhpc_rebuild_clouds_content['clouds'] | length == 1
+      fail_msg: "More than one cloud defined in {{ openhpc_rebuild_clouds }}"
+  - name: Check clouds.yaml works
+    openstack.cloud.auth:
+      # NB: can't use `cloud` parameter due to bug: https://storyboard.openstack.org/#!/story/2008600
+      auth: "{{ openhpc_rebuild_clouds_content['clouds'][cloud_name].auth }}"
+      auth_type: "{{ openhpc_rebuild_clouds_content['clouds'][cloud_name].auth_type }}"
+    vars:
+      cloud_name: "{{ openhpc_rebuild_clouds_content['clouds'] | first }}"
+    register: token
+    no_log: "{{ openhpc_rebuild_no_log }}"
   delegate_to: localhost
-  delegate_facts: true
   run_once: true
