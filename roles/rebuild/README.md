@@ -36,17 +36,26 @@ The `stackhpc.openhpc` role.
 Example Playbook
 ----------------
 
-    - hosts: cluster
-      name: Setup openstack rebuild script
-      tags: rebuild
-      become: true
-      tasks:
-        - import_role:
-            name: stackhpc.slurm_openstack_tools.rebuild
-          vars:
-            openhpc_enable:
-              batch: "{{ inventory_hostname in groups['cluster_compute'] }}"
-
+```yaml
+- name: Setup slurm
+  hosts: openhpc
+  become: yes
+  vars:
+    openhpc_enable:
+      batch: "{{ inventory_hostname in groups['cluster_compute'] }}"
+    # NB: see stackpc.openhpc role for its other required vars
+  tasks:
+    - name: Validate application credential for rebuild
+      import_role:
+        name: stackhpc.slurm_openstack_tools.rebuild
+        tasks_from: validate.yml
+    - name: Create slurm cluster
+      import_role:
+        name: stackhpc.openhpc
+    - name: Setup slurm-driven reimage
+      import_role:
+        name: stackhpc.slurm_openstack_tools.rebuild
+```
 
 License
 -------
