@@ -26,28 +26,36 @@ Role Variables
 - `openhpc_rebuild_reconfigure`: Optional bool, whether to reconfigure Slurm at the end of this role so `scontrol reboot ...` uses the new script. Default `true`.
 - `openhpc_enable.batch`: Set to `true` on compute nodes. Note this is the same variable as used in `stackhpc.openhpc`.
 
-
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+It is recommended that the `openhpc_rebuild_clouds` is an [application credential](https://docs.openstack.org/keystone/latest/user/application_credentials.html). This can be created in Horizon via Identity > Application Credentials > +Create Application Credential. The usual role required is `member`. Using access rules has been found not to work at present. Note that the downloaded credential can be encrpyted using `ansible-vault` to allow commit to source control. It will automatically be decrypted when copied onto the compute nodes.
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+The `stackhpc.openhpc` role.
 
 Example Playbook
 ----------------
 
-    - hosts: cluster
-      name: Setup openstack rebuild script
-      tags: rebuild
-      become: true
-      tasks:
-        - import_role:
-            name: stackhpc.slurm_openstack_tools.rebuild
-          vars:
-            openhpc_enable:
-              batch: "{{ inventory_hostname in groups['cluster_compute'] }}"
-
+```yaml
+- name: Setup slurm
+  hosts: openhpc
+  become: yes
+  vars:
+    openhpc_enable:
+      batch: "{{ inventory_hostname in groups['cluster_compute'] }}"
+    # NB: see stackpc.openhpc role for its other required vars
+  tasks:
+    - name: Validate application credential for rebuild
+      import_role:
+        name: stackhpc.slurm_openstack_tools.rebuild
+        tasks_from: validate.yml
+    - name: Create slurm cluster
+      import_role:
+        name: stackhpc.openhpc
+    - name: Setup slurm-driven reimage
+      import_role:
+        name: stackhpc.slurm_openstack_tools.rebuild
+```
 
 License
 -------
@@ -57,4 +65,4 @@ Apache-2.0
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+StackHPC Ltd
