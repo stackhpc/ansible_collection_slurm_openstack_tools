@@ -15,24 +15,9 @@
         owner: root
         group: root
         mode: '0400'
-  when: openhpc_enable.batch
-  # TODO: warn/error if more than one entry?
-
-- block:
-    - name: install python3
-      package:
-        name: python3,git
-    - name: create venv
-      command: python3 -m venv /opt/slurm-tools
-      args:
-        creates: /opt/slurm-tools
-    - name: install slurm-openstack-tools
-      shell: |
-        source /opt/slurm-tools/bin/activate
-        pip install -U pip
-        pip install git+https://github.com/stackhpc/slurm-openstack-tools.git
-      args:
-        creates: /opt/slurm-tools/bin/slurm-openstack-rebuild
+    - name: Setup slurm tools
+      include_role:
+        name: pytools
   when: openhpc_enable.batch
 
 - name: check for slurm.conf
