@@ -7,8 +7,8 @@
 - name: Create virtualenv directory
   file:
     path: /opt/slurm-tools
-    owner: slurm
-    group: slurm
+    owner: "{{ pytools_user }}"
+    group: "{{ pytools_user }}"
     state: directory
   become: true
 
@@ -30,5 +30,5 @@
       virtualenv_command: python3 -m venv
       state: latest
   become: true
-  become_user: slurm
-  become_flags: -H #'-s /bin/bash' # as has shell specified as /sbin/nologin
+  become_user: "{{ pytools_user }}"
+  # become_flags: -H #'-s /bin/bash' # as has shell specified as /sbin/nologin
