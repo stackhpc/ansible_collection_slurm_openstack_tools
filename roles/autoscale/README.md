@@ -4,7 +4,7 @@ Support autoscaling nodes on OpenStack clouds, i.e. creating nodes when necessar
 
 This is implemented using Slurm's ["elastic computing"](https://slurm.schedmd.com/elastic_computing.html) features which are based on Slurm's [power saving](https://slurm.schedmd.com/power_save.html) features.
 
-Add the `control` group to the `autoscale` group to activate this functionality in the `ansible/slurm.yml` playbook. Note some role variables are likely to need configuring. By default, node creation and deletion will be logged in the control node's syslog.
+This role should run on the Slurm control node only. Note some role variables are likely to need configuring. By default, node creation and deletion will be logged in the control node's syslog.
 
 ## Requirements
 
@@ -70,11 +70,25 @@ openhpc_slurm_partitions:
 
 # Dependencies
 
-`stackhpc.openhpc` role as described above.
+`stackhpc.openhpc` role. This role needs to run before tasks from `stackhpc.openhpc:runtime.yml` but requires the `slurm` user to be present. See example playbook below.
 
 # Example Playbook
 
-See ansible/slurm.yml
+```yaml
+  - hosts: control
+    become: yes
+    tasks:
+      - name: Install Slurm packages to create slurm user
+        import_role:
+          name: stackhpc.openhpc
+          tasks_from: install.yml
+      - name: Setup autoscaling using OpenStack
+        import_role:
+          name: stackhpc.slurm_openstack_tools.autoscale
+      - name: Setup Slurm
+        import_role:
+          name: stackhpc.openhpc
+```
 
 # License
 
