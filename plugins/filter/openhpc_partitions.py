@@ -49,7 +49,7 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, flavors, openhpc_ram_m
                 if len(flavor) != 1:
                     raise errors.AnsibleFilterError(f'expected one flavor matching {group["cloud_instances"]["flavor"]}, found {len(flavor)}: {flavor}')
                 flavor = flavor[0]
-                missing_flavor_attrs = ', '.join(set(['ram', 'vcpus'].difference(flavor)))
+                missing_flavor_attrs = ', '.join(set(['ram', 'vcpus']).difference(flavor))
                 if missing_flavor_attrs:
                     raise errors.AnsibleFilterError(f'OpenStack flavor {flavor["name"]} missing items: {missing_flavor_attrs}')
                 ram_mb = int(flavor['ram'] * group.get('ram_multiplier', openhpc_ram_multiplier)) # ram in flavor in MB, so no units conversion needed
