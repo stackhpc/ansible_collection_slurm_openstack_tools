@@ -23,6 +23,7 @@ Role Variables
 
 - `openhpc_rebuild_clouds`: Optional, path to a `clouds.yaml` file containing a single cloud. Defaults to `~/.config/openstack/clouds.yaml`.
 - `openhpc_enable.batch`: Set to `true` on compute nodes. Note this is the same variable as used in `stackhpc.openhpc` so will not need to be specifically set.
+- `openhpc_rebuild_no_log`: Optional bool, default of true prevents contents of `openhpc_rebuild_clouds` from being logged.
 
 It is recommended that the `openhpc_rebuild_clouds` is an [application credential](https://docs.openstack.org/keystone/latest/user/application_credentials.html). This can be created in Horizon via Identity > Application Credentials > +Create Application Credential. The usual role required is `member`. Using access rules has been found not to work at present. Note that the downloaded credential can be encrpyted using `ansible-vault` to allow commit to source control. It will automatically be decrypted when copied onto the compute nodes.
 
