@@ -44,7 +44,7 @@
 
 - name: Modify openhpc_slurm_partitions
   set_fact:
-    openhpc_slurm_partitions: "{{ openhpc_slurm_partitions | modify_autoscale_partitions(flavor_info, openhpc_ram_multiplier) }}"
+    openhpc_slurm_partitions: "{{ openhpc_slurm_partitions | stackhpc.slurm_openstack_tools.modify_autoscale_partitions(flavor_info, openhpc_ram_multiplier) }}"
     
 - name: Merge autoscale configuration
   set_fact:
