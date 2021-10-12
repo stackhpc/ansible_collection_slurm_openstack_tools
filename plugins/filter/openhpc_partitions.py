@@ -31,7 +31,7 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier
         NB: Assumes openstack CLI client is installed on the ansible controller.
         
         Args:
-            partitions: openhpc_slurm_partitions variable from stackhpc.openhpc role.
+            openhpc_slurm_partitions: openhpc_slurm_partitions variable from stackhpc.openhpc role.
             openhpc_ram_multiplier: openhpc_ram_multiplier variable from stackhpc.openhpc role.
     """
 
