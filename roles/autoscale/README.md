@@ -9,10 +9,9 @@ This role should run on the Slurm control node only. Note some role variables ar
 ## Requirements
 
 - Working DNS.
-- Active OpenStack credentials on localhost (e.g a sourced `openrc.sh` in the shell running ansible).
+- The OpenStack CLI client and active OpenStack credentials on localhost (e.g a sourced `openrc.sh` in the shell running ansible).
 - Role `stackhpc.slurm_openstack_tools.pytools`. Installs [slurm-openstack-tools](github.com/stackhpc/slurm-openstack-tools) which provides a venv with the `openstacksdk` and the required resume/suspend scripts.
 - Role `stackhpc.openhpc` to create a Slurm cluster.
-- This role should be run on the Slurm controller only.
 
 ## Role Variables
 
@@ -38,12 +37,15 @@ Partitions/groups defining `cloud_nodes` may or may not also contain non-CLOUD s
 
 Some examples are given below. Note that currently monitoring is not enabled for CLOUD-state nodes.
 
-### Examples
+## Example variable and partition definitions
 
-Below is an example of partition definition, e.g. in `environments/<environment>/inventory/group_vars/openhpc/overrides.yml`. Not shown here the inventory group `dev_small` contains 2 (non-CLOUD state) nodes. The "small" partition is the default and contains 2 non-CLOUD and 2 CLOUD nodes. The "burst" partition contains only CLOUD-state nodes.
+The example below could be placed in `environments/<env>/inventory/group_vars/openhpc/overrides.yml`:
+- Not shown here is the inventory group `dev_small` containing 2 (non-CLOUD state) nodes.
+- The "small" partition is the default and contains 2 non-CLOUD and 2 CLOUD nodes.
+- The "burst" partition contains only CLOUD-state nodes.
 
 ```yaml
-openhpc_cluster_name: dev
+openhpc_cluster_name: dev # normally in e.g. environments/<env>/inventory/hosts but shown here for clarity
 general_v1_small:
   image: ohpc-compute-210909-1316.qcow2
   flavor: general.v1.small
@@ -73,6 +75,8 @@ openhpc_slurm_partitions:
 `stackhpc.openhpc` role. This role needs to run before tasks from `stackhpc.openhpc:runtime.yml` but requires the `slurm` user to be present. See example playbook below.
 
 # Example Playbook
+
+This role should be run on the Slurm controller only.
 
 ```yaml
   - hosts: control
