@@ -18,17 +18,20 @@
 from ansible import errors
 import jinja2
 import re
+import subprocess
+import json
 
 REQUIRED_INSTANCE_ATTRS=('flavor', 'image', 'keypair', 'network')
 
-def modify_autoscale_partitions(openhpc_slurm_partitions, flavors, openhpc_ram_multiplier):
+def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier):
     """ Modify openhpc_slurm_partitions to add autoscaling information.
     
         For each group/partition this constructs an `extra_nodes` option using information from the `cloud_nodes` and `cloud_instances` options.
+
+        NB: Assumes openstack CLI client is installed on the ansible controller.
         
         Args:
             partitions: openhpc_slurm_partitions variable from stackhpc.openhpc role.
-            flavors: List of dicts with info from `openstack flavor show`. Must contain keys 'ram' and 'vcpus'.
             openhpc_ram_multiplier: openhpc_ram_multiplier variable from stackhpc.openhpc role.
     """
 
@@ -45,10 +48,9 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, flavors, openhpc_ram_m
                 cloud_names = group['cloud_nodes']
                 # TODO: check for cloud nodes overlapping real ones?
                 
-                flavor = [f for f in flavors if f['name'] == group['cloud_instances']['flavor']]
-                if len(flavor) != 1:
-                    raise errors.AnsibleFilterError(f'expected one flavor matching {group["cloud_instances"]["flavor"]}, found {len(flavor)}: {flavor}')
-                flavor = flavor[0]
+                flavor_name = group["cloud_instances"]["flavor"]
+                flavor_show = subprocess.run(['openstack', 'flavor', 'show', '--format', 'json', flavor_name], stdout=subprocess.PIPE, universal_newlines=True)
+                flavor = json.loads(flavor_show.stdout)
                 missing_flavor_attrs = ', '.join(set(['ram', 'vcpus']).difference(flavor))
                 if missing_flavor_attrs:
                     raise errors.AnsibleFilterError(f'OpenStack flavor {flavor["name"]} missing items: {missing_flavor_attrs}')

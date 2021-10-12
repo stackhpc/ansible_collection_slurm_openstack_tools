@@ -21,24 +21,9 @@
   vars:
     pytools_user: slurm
 
-- name: Get cloud_node specs
-  shell:
-    cmd: "openstack flavor show --format json {{ item.cloud_instances.flavor }}"
-  delegate_to: localhost
-  run_once: true
-  loop: "{{ openhpc_slurm_partitions }}"
-  when: "'cloud_instances' in item"
-  register: _os_flavors
-  become: no
-  changed_when: false
-
-- name: Manipulate flavor information
-  set_fact:
-    flavor_info: "{{ _os_flavors.results | map(attribute='stdout') | map('from_json') }}" # list of json info
-
 - name: Modify openhpc_slurm_partitions
   set_fact:
-    openhpc_slurm_partitions: "{{ openhpc_slurm_partitions | stackhpc.slurm_openstack_tools.modify_autoscale_partitions(flavor_info, openhpc_ram_multiplier) }}"
+    openhpc_slurm_partitions: "{{ openhpc_slurm_partitions | stackhpc.slurm_openstack_tools.modify_autoscale_partitions(openhpc_ram_multiplier) }}"
     
 - name: Merge autoscale configuration
   set_fact:
