@@ -12,7 +12,7 @@
 
   - name: Create virtualenv
     pip:
-      name: "git+https://github.com/stackhpc/slurm-openstack-tools.git#egg=slurm_openstack_tools"
+      name: "git+https://github.com/stackhpc/slurm-openstack-tools.git@{{ pytools_gitref }}#egg=slurm_openstack_tools"
       editable: "{{ pytools_editable }}"
 
   module_defaults:
