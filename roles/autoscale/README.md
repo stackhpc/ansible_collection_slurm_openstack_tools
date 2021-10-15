@@ -2,9 +2,15 @@
 
 Support autoscaling nodes on OpenStack clouds, i.e. creating nodes when necessary to service the queue and deleting them when they are no longer needed.
 
-This is implemented using Slurm's ["elastic computing"](https://slurm.schedmd.com/elastic_computing.html) features which are based on Slurm's [power saving](https://slurm.schedmd.com/power_save.html) features.
+This is implemented using Slurm's ["elastic computing"](https://slurm.schedmd.com/elastic_computing.html) features. As these use Slurm's [power saving](https://slurm.schedmd.com/power_save.html) features it operates slightly differently than might be expected:
+- Nodes can be defined as in a "CLOUD" state which means the Slurm controller does not expect to be able to contact them on startup.
+- Having any CLOUD state nodes in the config enables powersaving globally for the cluster, although specific nodes can be excluded from powersaving.
+- With powersaving enabled, Slurm will resume/add nodes as necessary to service jobs in the queue, and suspend/destroy them (after a configurable delay) when idle.
+- All potential nodes in the cluster - including those in CLOUD state - must be defined in the Slurm configuration. The maximum size of the cluster is therefore fixed, and changing this requires a restart of all Slurm daemons.
 
-This role should run on the Slurm control node only. Note some role variables are likely to need configuring. By default, node creation and deletion will be logged in the control node's syslog.
+By default, node creation and deletion will be logged in the control node's syslog.
+
+This role should run on the Slurm control node only. Note some role variables are likely to need configuring.
 
 ## Requirements
 
@@ -26,7 +32,7 @@ The following variables may need altering for production:
 - `autoscale_show_suspended_nodes`: Optional, default `true`. Whether to show suspended/powered-down nodes in `sinfo` etc. See `slurm.conf` parameter [PrivateData - cloud](https://slurm.schedmd.com/archive/slurm-20.11.7/slurm.conf.html#OPT_cloud).
 - `autoscale_debug_powersaving`: Optional, default `true`. Log additional information for powersaving, see `slurm.conf` parameter [DebugFlags - PowerSave](https://slurm.schedmd.com/archive/slurm-20.11.7/slurm.conf.html#OPT_PowerSave_2).
 - `autoscale_slurmctld_syslog_debug`: Optional, default `info`. Syslog logging level. See `slurm.conf` parameter [SlurmctldSyslogDebug](https://slurm.schedmd.com/archive/slurm-20.11.7/slurm.conf.html#OPT_SlurmctldSyslogDebug).
-- `autoscale_suspend_exc_nodes`: Optional. List of nodenames (or Slurm hostlist expressions) to exclude from "power saving", i.e. they will not be autoscaled away.
+- `autoscale_suspend_exc_nodes`: Optional. List of nodenames (or Slurm hostlist expressions) to exclude from "power saving", i.e. they will not be autoscaled away. If running this role from the [Slurm appliance](https://github.com/stackhpc/ansible-slurm-appliance/) note that by default login-only nodes and non-CLOUD state nodes are automatically excluded from power saving.
 
 ## stackhpc.openhpc role variables
 This role modifies what the [openhpc_slurm_partitions variable](https://github.com/stackhpc/ansible-role-openhpc#slurmconf) in the `stackhpc.openhpc` role accepts. Partition/group definitions may additionally include:

@@ -1,9 +1,7 @@
 autoscale_clouds: ~/.config/openstack/clouds.yaml
 
-# recommended:
-autoscale_show_suspended_nodes: true
-
 # useful for debugging, may want to amend in production:
+autoscale_show_suspended_nodes: true
 autoscale_debug_powersaving: true
 autoscale_slurmctld_syslog_debug: info # https://slurm.schedmd.com/slurm.conf.html#OPT_SlurmctldSyslogDebug
 
