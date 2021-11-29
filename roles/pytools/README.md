@@ -9,10 +9,13 @@ Requirements
 Role Variables
 --------------
 
-`pytools_editable`: Whether to install the package using `pip`'s editable mode (installing source to `/opt/slurm-tools/src`) - `true` or `false` (default).
+`pytools_editable`: Optional. Whether to install the package using `pip`'s editable mode (installing source to `/opt/slurm-tools/src`) - `true` or `false` (default).
+`pytools_gitref`: Optional. Git branch, version, commit etc to install. Default `master`.
+`pytools_user`: User to install as. Default `root`.
 
 Dependencies
 ------------
+None.
 
 Example Playbook
 ----------------

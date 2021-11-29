@@ -1,5 +1,4 @@
 ---
-
 - block:
     - name: Create /etc/openstack
       file:
@@ -17,23 +16,9 @@
         mode: '0400'
     - name: Setup slurm tools
       include_role:
-        name: pytools
+        name: stackhpc.slurm_openstack_tools.pytools
   when: openhpc_enable.batch
 
-- name: check for slurm.conf
-  stat:
-    path: /etc/slurm/slurm.conf
-  register: slurm_conf
-
-- name: add RebootProgram to slurm.conf
-  lineinfile:
-    path: "/etc/slurm/slurm.conf"
-    regexp: "^RebootProgram=.*$"
-    line: "RebootProgram=/opt/slurm-tools/bin/slurm-openstack-rebuild"
-  when: slurm_conf.stat.exists
-
-- name: reconfigure slurm
-  shell:
-    cmd: "scontrol reconfigure"
-  when: openhpc_rebuild_reconfigure
-  run_once: true
+- name: Merge rebuild configuration
+  set_fact:
+    openhpc_config: "{{ rebuild_openhpc_config | combine(openhpc_config, list_merge='append') }}"

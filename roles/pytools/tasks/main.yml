@@ -2,6 +2,15 @@
 - name: install python3
   package:
     name: python3,git
+  become: true
+
+- name: Create virtualenv directory
+  file:
+    path: /opt/slurm-tools
+    owner: "{{ pytools_user }}"
+    group: "{{ pytools_user }}"
+    state: directory
+  become: true
 
 - block:
   - name: Upgrade pip
@@ -21,3 +30,5 @@
       virtualenv_command: python3 -m venv
       state: latest
   become: true
+  become_user: "{{ pytools_user }}"
+  # become_flags: -H #'-s /bin/bash' # as has shell specified as /sbin/nologin
