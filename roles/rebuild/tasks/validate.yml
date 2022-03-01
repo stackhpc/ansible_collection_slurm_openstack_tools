@@ -25,6 +25,6 @@
       cloud_name: "{{ openhpc_rebuild_clouds_content['clouds'] | first }}"
     register: token
     no_log: "{{ openhpc_rebuild_no_log }}"
-    become: yes # else get an error "Application credentials cannot request a scope."
+
   delegate_to: localhost
   run_once: true
