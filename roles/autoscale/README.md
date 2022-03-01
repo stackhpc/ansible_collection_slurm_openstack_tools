@@ -39,7 +39,7 @@ This role modifies what the [openhpc_slurm_partitions variable](https://github.c
 - `cloud_nodes`: Optional. Slurm hostlist expression (e.g. `'small-[8,10-16]'`) defining names of nodes to be defined in a ["CLOUD" state](https://slurm.schedmd.com/slurm.conf.html#OPT_CLOUD), i.e. not operational when the Slurm control daemon starts.
 - `cloud_instances`: Required if `cloud_nodes` is defined. A mapping with keys `flavor`, `image`, `keypair` and `network` defining the OpenStack ID or names of properties for the CLOUD-state instances.
 
-Partitions/groups defining `cloud_nodes` may or may not also contain non-CLOUD state nodes (i.e. nodes in a matching inventory group). For CLOUD-state nodes, memory and CPU information is retrieved from OpenStack for the specified flavors. The `stackhpc.openhpc` group/partition options `ram_mb` and `ram_multiplier` and role variable `openhpc_ram_multiplier` are handled exactly as for non-CLOUD state nodes. This implies that if CLOUD and non-CLOUD state nodes are mixed in a single group all nodes must be homogenous in terms of processors/memory.
+Partitions/groups defining `cloud_nodes` may or may not also contain non-CLOUD state nodes (i.e. nodes in a matching inventory group). For CLOUD-state nodes, CPU information is retrieved from OpenStack for the specified flavors. The `stackhpc.openhpc` group/partition option `ram_mb` **MUST** be defined. This implies that if CLOUD and non-CLOUD state nodes are mixed in a single group all nodes must be homogenous in terms of processors/memory.
 
 Some examples are given below. Note that currently monitoring is not enabled for CLOUD-state nodes.
 
@@ -67,11 +67,13 @@ general_v1_medium:
 openhpc_slurm_partitions:
 - name: small
   default: yes
+  ram_mb: 1024
   cloud_nodes: dev-small-[2-3]
   cloud_instances: "{{ general_v1_small }}"
 
 - name: burst
   default: no
+  ram_mb: 2048
   cloud_nodes: 'burst-[0-3]'
   cloud_instances: "{{ general_v1_medium }}"
 ```

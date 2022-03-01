@@ -23,7 +23,7 @@ import json
 
 REQUIRED_INSTANCE_ATTRS=('flavor', 'image', 'keypair', 'network')
 
-def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier):
+def modify_autoscale_partitions(openhpc_slurm_partitions):
     """ Modify openhpc_slurm_partitions to add autoscaling information.
     
         For each group/partition this constructs an `extra_nodes` option using information from the `cloud_nodes` and `cloud_instances` options.
@@ -32,7 +32,6 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier
         
         Args:
             openhpc_slurm_partitions: openhpc_slurm_partitions variable from stackhpc.openhpc role.
-            openhpc_ram_multiplier: openhpc_ram_multiplier variable from stackhpc.openhpc role.
     """
 
     for part in openhpc_slurm_partitions:
@@ -42,6 +41,8 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier
             if 'cloud_nodes' in group:
                 if 'cloud_instances' not in group:
                     raise errors.AnsibleFilterError(f"`openhpc_slurm_partitions` group '{group_name}' specifies 'cloud_nodes' but is missing 'cloud_instances'.")
+                if 'ram_mb' not in group:
+                    raise errors.AnsibleFilterError(f"`openhpc_slurm_partitions` group '{group_name}' specifies 'cloud_nodes' but is missing 'ram_mb'.")
                 missing_attrs = ', '.join(set(REQUIRED_INSTANCE_ATTRS).difference(group['cloud_instances']))
                 if missing_attrs:
                     raise errors.AnsibleFilterError(f"`openhpc_slurm_partitions` group '{group_name}' item 'cloud_instances' is missing items: {missing_attrs}.")
@@ -54,7 +55,6 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier
                 missing_flavor_attrs = ', '.join(set(['ram', 'vcpus']).difference(flavor))
                 if missing_flavor_attrs:
                     raise errors.AnsibleFilterError(f'OpenStack flavor {flavor["name"]} missing items: {missing_flavor_attrs}')
-                ram_mb = int(flavor['ram'] * group.get('ram_multiplier', openhpc_ram_multiplier)) # ram in flavor in MB, so no units conversion needed
 
                 features = ['%s=%s' % (k, v) for (k, v) in group['cloud_instances'].items()]
                 cloud_nodes = {
@@ -62,7 +62,7 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier
                     'State':'CLOUD',
                     'Features': ','.join(features),
                     'CPUs': flavor['vcpus'],
-                    'RealMemory': group.get('ram_mb', ram_mb)
+                    'RealMemory': group['ram_mb'],
                 }
                 
                 group['extra_nodes'] = group.get('extra_nodes', [])
