@@ -1,4 +1,5 @@
 autoscale_clouds: ~/.config/openstack/clouds.yaml
+autoscale_no_log: true
 
 # useful for debugging, may want to amend in production:
 autoscale_show_suspended_nodes: true
@@ -18,6 +19,7 @@ autoscale_suspend_exc_nodes: []
 autoscale_openhpc_config:
   SuspendProgram: /opt/slurm-tools/bin/slurm-openstack-suspend
   ResumeProgram: /opt/slurm-tools/bin/slurm-openstack-resume
+  ResumeFailProgram: /opt/slurm-tools/bin/slurm-openstack-resumefail
   SlurmctldParameters:
     - idle_on_node_suspend # https://slurm.schedmd.com/slurm.conf.html#OPT_idle_on_node_suspend
     - cloud_dns # https://slurm.schedmd.com/slurm.conf.html#OPT_cloud_dns

@@ -1,0 +1,18 @@
+- name: Check can run openstack cli on localhost
+  # stackhpc.slurm_openstack_tools/plugins/filter:modify_autoscale_partitions runs `openstack ...` locally, so need to check that works
+  # which is subtly different from checking the clouds.yaml works for rebuild (which also checks it works for autoscale)
+  shell:
+    cmd: openstack token issue
+  delegate_to: localhost
+  run_once: true
+  register: token
+  failed_when: false
+  no_log: "{{ autoscale_no_log }}"
+
+- name: Show error even with no log
+  debug:
+    msg: |
+      Can't run openstack CLI on localhost. If using a clouds.yaml, did you set OS_CLOUD? Error was:
+      "{{ token.stderr }}"
+  when: token.rc != 0
+  failed_when: token.rc != 0
