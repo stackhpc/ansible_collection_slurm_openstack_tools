@@ -37,9 +37,9 @@ The following variables may need altering for production:
 ## stackhpc.openhpc role variables
 This role modifies what the [openhpc_slurm_partitions variable](https://github.com/stackhpc/ansible-role-openhpc#slurmconf) in the `stackhpc.openhpc` role accepts. Partition/group definitions may additionally include:
 - `cloud_nodes`: Optional. Slurm hostlist expression (e.g. `'small-[8,10-16]'`) defining names of nodes to be defined in a ["CLOUD" state](https://slurm.schedmd.com/slurm.conf.html#OPT_CLOUD), i.e. not operational when the Slurm control daemon starts.
-- `cloud_instances`: Required if `cloud_nodes` is defined. A mapping with keys `flavor`, `image`, `keypair` and `network` defining the OpenStack ID or names of properties for the CLOUD-state instances.
+- `cloud_instances`: Required if `cloud_nodes` is defined. A mapping with keys `flavor`, `image`, `keypair` and `network` defining the OpenStack ID or names of properties for CLOUD-state nodes. If there is a port with a name matching the node name on the specified network then the created instance will be attached to this port. This permits CLOUUD-state nodes to use predefined ports e.g. for direct-mode binding or if DNS is not available.
 
-Partitions/groups defining `cloud_nodes` may or may not also contain non-CLOUD state nodes (i.e. nodes in a matching inventory group). For CLOUD-state nodes, CPU information is retrieved from OpenStack for the specified flavors. The `stackhpc.openhpc` group/partition option `ram_mb` **MUST** be defined. This implies that if CLOUD and non-CLOUD state nodes are mixed in a single group all nodes must be homogenous in terms of processors/memory.
+**NB**: The `stackhpc.openhpc` partition/group options `ram_mb`, `sockets`, `cores_per_socket`, `threads_per_core` **must** be defined for autoscaling nodes. This implies that CLOUD and non-CLOUD state nodes in the same group (or partition if it does not contain groups) must be homogenous in terms of processors and memory.
 
 Some examples are given below. Note that currently monitoring is not enabled for CLOUD-state nodes.
 
