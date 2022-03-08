@@ -37,46 +37,17 @@ The following variables may need altering for production:
 ## stackhpc.openhpc role variables
 This role modifies what the [openhpc_slurm_partitions variable](https://github.com/stackhpc/ansible-role-openhpc#slurmconf) in the `stackhpc.openhpc` role accepts. Partition/group definitions may additionally include:
 - `cloud_nodes`: Optional. Slurm hostlist expression (e.g. `'small-[8,10-16]'`) defining names of nodes to be defined in a ["CLOUD" state](https://slurm.schedmd.com/slurm.conf.html#OPT_CLOUD), i.e. not operational when the Slurm control daemon starts.
-- `cloud_instances`: Required if `cloud_nodes` is defined. A mapping with keys `flavor`, `image`, `keypair` and `network` defining the OpenStack ID or names of properties for CLOUD-state nodes. If there is a port with a name matching the node name on the specified network then the created instance will be attached to this port. This permits CLOUUD-state nodes to use predefined ports e.g. for direct-mode binding or if DNS is not available.
 
-**NB**: The `stackhpc.openhpc` partition/group options `ram_mb`, `sockets`, `cores_per_socket`, `threads_per_core` **must** be defined for autoscaling nodes. This implies that CLOUD and non-CLOUD state nodes in the same group (or partition if it does not contain groups) must be homogenous in terms of processors and memory.
+If `cloud_nodes` is defined for a partition/group, the following parameters **must** be defined for that partition/group:
+- `cloud_instances`:  A mapping with keys `flavor`, `image`, `keypair` and `network` defining the OpenStack ID or names of properties for CLOUD-state nodes. If there is a port with a name matching the node name on the specified network then the created instance will be attached to this port, otherwise a new port is created. This permits CLOUD-state nodes to use predefined ports e.g. for non-default bindings or if DNS is not available.
+- `ram_mb`: The physical RAM available in each server of this group ([slurm.conf](https://slurm.schedmd.com/slurm.conf.html#OPT_RealMemoryl) parameter `RealMemory`) in MiB, i.e. some fraction of value reported by `free --mebi`. By default the `stackhpc.openhpc` role uses a fraction of 0.95 (see role variable `openhpc_ram_multiplier`) although this may be slightly high for some circumstances.
+- `sockets`: Number of sockets.
+- `cores_per_socket`: Number of cores per socket.
+- `threads_per_core`: Number of threads per core (physical or logical, as shown by e.g. `lscpu`).
 
-Some examples are given below. Note that currently monitoring is not enabled for CLOUD-state nodes.
+Note that for non-CLOUD nodes, the memory and CPU parameters are set automatically by Ansible in the `stackhpc.openhpc` role from host facts. This implies that if a group (or partition if it does not contain groups) contains both CLOUD and non-CLOUD nodes, they must be homogenous in terms of processors and memory.
 
-## Example variable and partition definitions
-
-The example below could be placed in `environments/<env>/inventory/group_vars/openhpc/overrides.yml`:
-- Not shown here is the inventory group `dev_small` containing 2 (non-CLOUD state) nodes.
-- The "small" partition is the default and contains 2 non-CLOUD and 2 CLOUD nodes.
-- The "burst" partition contains only CLOUD-state nodes.
-
-```yaml
-openhpc_cluster_name: dev # normally in e.g. environments/<env>/inventory/hosts but shown here for clarity
-general_v1_small:
-  image: ohpc-compute-210909-1316.qcow2
-  flavor: general.v1.small
-  keypair: centos-at-steveb-ansible
-  network: stackhpc-ipv4-geneve
-
-general_v1_medium:
-  image: ohpc-compute-210909-1316.qcow2
-  flavor: general.v1.medium
-  keypair: centos-at-steveb-ansible
-  network: stackhpc-ipv4-geneve
-
-openhpc_slurm_partitions:
-- name: small
-  default: yes
-  ram_mb: 1024
-  cloud_nodes: dev-small-[2-3]
-  cloud_instances: "{{ general_v1_small }}"
-
-- name: burst
-  default: no
-  ram_mb: 2048
-  cloud_nodes: 'burst-[0-3]'
-  cloud_instances: "{{ general_v1_medium }}"
-```
+Note that currently monitoring is not enabled for CLOUD-state nodes.
 
 # Dependencies
 
