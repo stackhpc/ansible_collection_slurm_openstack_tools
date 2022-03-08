@@ -22,8 +22,9 @@ import subprocess
 import json
 
 REQUIRED_INSTANCE_ATTRS=('flavor', 'image', 'keypair', 'network')
+REQUIRED_GROUP_ATTRS=('ram_mb', 'sockets', 'cores_per_socket', 'threads_per_core')
 
-def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier):
+def modify_autoscale_partitions(openhpc_slurm_partitions):
     """ Modify openhpc_slurm_partitions to add autoscaling information.
     
         For each group/partition this constructs an `extra_nodes` option using information from the `cloud_nodes` and `cloud_instances` options.
@@ -32,7 +33,6 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier
         
         Args:
             openhpc_slurm_partitions: openhpc_slurm_partitions variable from stackhpc.openhpc role.
-            openhpc_ram_multiplier: openhpc_ram_multiplier variable from stackhpc.openhpc role.
     """
 
     for part in openhpc_slurm_partitions:
@@ -42,29 +42,25 @@ def modify_autoscale_partitions(openhpc_slurm_partitions, openhpc_ram_multiplier
             if 'cloud_nodes' in group:
                 if 'cloud_instances' not in group:
                     raise errors.AnsibleFilterError(f"`openhpc_slurm_partitions` group '{group_name}' specifies 'cloud_nodes' but is missing 'cloud_instances'.")
-                missing_attrs = ', '.join(set(REQUIRED_INSTANCE_ATTRS).difference(group['cloud_instances']))
-                if missing_attrs:
-                    raise errors.AnsibleFilterError(f"`openhpc_slurm_partitions` group '{group_name}' item 'cloud_instances' is missing items: {missing_attrs}.")
+                missing_group_attrs = ', '.join(set(REQUIRED_GROUP_ATTRS).difference(group))
+                if missing_group_attrs:
+                    raise errors.AnsibleFilterError(f"`openhpc_slurm_partitions` group '{group_name}' specifies 'cloud_nodes' but is missing items: {missing_group_attrs}.")
+                missing_instance_attrs = ', '.join(set(REQUIRED_INSTANCE_ATTRS).difference(group['cloud_instances']))
+                if missing_instance_attrs:
+                    raise errors.AnsibleFilterError(f"`openhpc_slurm_partitions` group '{group_name}' item 'cloud_instances' is missing items: {missing_instance_attrs}.")
                 cloud_names = group['cloud_nodes']
                 # TODO: check for cloud nodes overlapping real ones?
                 
-                flavor_name = group["cloud_instances"]["flavor"]
-                flavor_show = subprocess.run(['openstack', 'flavor', 'show', '--format', 'json', flavor_name], stdout=subprocess.PIPE, universal_newlines=True)
-                flavor = json.loads(flavor_show.stdout)
-                missing_flavor_attrs = ', '.join(set(['ram', 'vcpus']).difference(flavor))
-                if missing_flavor_attrs:
-                    raise errors.AnsibleFilterError(f'OpenStack flavor {flavor["name"]} missing items: {missing_flavor_attrs}')
-                ram_mb = int(flavor['ram'] * group.get('ram_multiplier', openhpc_ram_multiplier)) # ram in flavor in MB, so no units conversion needed
-
                 features = ['%s=%s' % (k, v) for (k, v) in group['cloud_instances'].items()]
                 cloud_nodes = {
                     'NodeName': cloud_names,
                     'State':'CLOUD',
+                    'RealMemory': group['ram_mb'],
+                    'Sockets': group['sockets'],
+                    'CoresPerSocket': group['cores_per_socket'],
+                    'ThreadsPerCore': group['threads_per_core'],
                     'Features': ','.join(features),
-                    'CPUs': flavor['vcpus'],
-                    'RealMemory': group.get('ram_mb', ram_mb)
                 }
-                
                 group['extra_nodes'] = group.get('extra_nodes', [])
                 group['extra_nodes'].append(cloud_nodes)
 
